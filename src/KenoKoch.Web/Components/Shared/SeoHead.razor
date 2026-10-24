@@ -1,0 +1,41 @@
+@inject IOptions<SiteOptions> Site
+
+<PageTitle>@FullTitle</PageTitle>
+<HeadContent>
+    <meta name="description" content="@Description" />
+    <link rel="canonical" href="@Canonical" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Keno Koch" />
+    <meta property="og:title" content="@FullTitle" />
+    <meta property="og:description" content="@Description" />
+    <meta property="og:url" content="@Canonical" />
+    <meta property="og:image" content="@($"{BaseUrl}/img/og-image.png")" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="de_DE" />
+    <meta name="twitter:card" content="summary_large_image" />
+    @if (NoIndex)
+    {
+        <meta name="robots" content="noindex" />
+    }
+</HeadContent>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Description { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Path { get; set; } = "/";
+
+    [Parameter]
+    public bool NoIndex { get; set; }
+
+    private string BaseUrl => Site.Value.BaseUrl.TrimEnd('/');
+
+    private string Canonical => BaseUrl + Path;
+
+    private string FullTitle => Path == "/" ? $"Keno Koch · {Title}" : $"{Title} · Keno Koch";
+}

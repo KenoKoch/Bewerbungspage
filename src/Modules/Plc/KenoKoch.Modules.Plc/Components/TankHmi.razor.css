@@ -1,0 +1,324 @@
+.hmi-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    font-family: var(--font-sans);
+}
+
+.hmi-label {
+    fill: #94a3b8;
+    font-size: 11px;
+}
+
+.hmi-tag {
+    fill: #e2e8f0;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+}
+
+.hmi-state {
+    fill: #cbd5e1;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+}
+
+.hmi-value {
+    fill: #fff;
+    font-size: 36px;
+    font-weight: 700;
+    text-anchor: middle;
+    paint-order: stroke;
+    stroke: rgba(2, 6, 23, .55);
+    stroke-width: 5px;
+    letter-spacing: -.02em;
+}
+
+.hmi-subvalue {
+    fill: #e0f2fe;
+    font-size: 13px;
+    text-anchor: middle;
+    paint-order: stroke;
+    stroke: rgba(2, 6, 23, .55);
+    stroke-width: 4px;
+}
+
+/* Rohrleitungen */
+.hmi-pipe {
+    fill: none;
+    stroke: #3b4a5e;
+    stroke-width: 13;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.hmi-pipe-core {
+    fill: none;
+    stroke: #141c28;
+    stroke-width: 8;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.hmi-flow {
+    fill: none;
+    stroke: #7dd3fc;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 7 15;
+    opacity: 0;
+    transition: opacity .35s;
+}
+
+.hmi-flow.is-active {
+    opacity: .95;
+    animation: hmi-flow .9s linear infinite;
+}
+
+@keyframes hmi-flow {
+    to {
+        stroke-dashoffset: -44;
+    }
+}
+
+/* Behälter und Wasser */
+.hmi-tank-shell {
+    stroke: #64748b;
+    stroke-width: 2;
+}
+
+.hmi-tank-inner {
+    fill: #070d17;
+}
+
+.hmi-water {
+    transition: transform .12s linear;
+}
+
+.hmi-wave {
+    animation: hmi-wave 1.4s linear infinite;
+}
+
+.hmi-wave path {
+    fill: #7dd3fc;
+    opacity: .5;
+}
+
+@keyframes hmi-wave {
+    to {
+        transform: translateX(-20px);
+    }
+}
+
+.hmi-stream {
+    fill: #7dd3fc;
+    opacity: 0;
+    transition: opacity .3s;
+}
+
+.hmi-stream.is-active {
+    opacity: .65;
+}
+
+.hmi-setpoint {
+    stroke: rgba(226, 232, 240, .28);
+    stroke-width: 1;
+    stroke-dasharray: 4 5;
+}
+
+/* Skala und Grenzwerte */
+.hmi-scale {
+    stroke: #64748b;
+    stroke-width: 1.5;
+}
+
+.hmi-marker--danger { fill: #f87171; }
+.hmi-marker--info { fill: #94a3b8; }
+.hmi-marker--warn { fill: #fbbf24; }
+
+.hmi-marker-line {
+    stroke-width: 1;
+    stroke-dasharray: 2 3;
+}
+
+.hmi-marker-line--danger { stroke: #f87171; }
+.hmi-marker-line--info { stroke: #94a3b8; }
+.hmi-marker-line--warn { stroke: #fbbf24; }
+
+.hmi-marker-text {
+    font-size: 11px;
+    font-family: var(--font-mono);
+}
+
+.hmi-marker-text--danger { fill: #fca5a5; }
+.hmi-marker-text--info { fill: #94a3b8; }
+.hmi-marker-text--warn { fill: #fcd34d; }
+
+/* LSHH */
+.hmi-switch line {
+    stroke: #64748b;
+    stroke-width: 2;
+}
+
+.hmi-switch circle {
+    fill: #1e293b;
+    stroke: #94a3b8;
+    stroke-width: 1.5;
+    transition: fill .2s;
+}
+
+.hmi-switch text {
+    fill: #94a3b8;
+    font-size: 11px;
+    font-family: var(--font-mono);
+}
+
+.hmi-switch.is-active circle {
+    fill: #ef4444;
+    stroke: #fecaca;
+    filter: drop-shadow(0 0 6px #ef4444);
+}
+
+.hmi-switch.is-active text {
+    fill: #fca5a5;
+}
+
+/* Messumformer */
+.hmi-instrument circle {
+    fill: #0f172a;
+    stroke: #94a3b8;
+    stroke-width: 1.5;
+}
+
+.hmi-instrument line {
+    stroke: #94a3b8;
+    stroke-width: 1.2;
+}
+
+.hmi-instrument .hmi-signal {
+    stroke-dasharray: 3 3;
+}
+
+.hmi-instrument text {
+    fill: #e2e8f0;
+    font-size: 10px;
+    font-family: var(--font-mono);
+}
+
+.hmi-readout {
+    fill: #020617;
+    stroke: #334155;
+}
+
+.hmi-readout-text {
+    fill: #67e8f9;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+}
+
+/* Pumpe */
+.hmi-pump-body {
+    fill: #475569;
+    stroke: #cbd5e1;
+    stroke-width: 2;
+    transition: fill .25s;
+}
+
+.hmi-pump-symbol {
+    fill: none;
+    stroke: #f1f5f9;
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+}
+
+.hmi-pump-halo {
+    fill: none;
+    stroke: #4ade80;
+    stroke-width: 2;
+    stroke-dasharray: 5 9;
+    opacity: 0;
+    transform-origin: 180px 320px;
+    transition: opacity .3s;
+}
+
+.hmi-pump--run .hmi-pump-body {
+    fill: #16a34a;
+}
+
+.hmi-pump--run .hmi-pump-halo {
+    opacity: .85;
+    animation: hmi-spin 1.6s linear infinite;
+}
+
+.hmi-pump--fault .hmi-pump-body {
+    fill: #dc2626;
+    animation: hmi-blink 1s steps(2, jump-none) infinite;
+}
+
+@keyframes hmi-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes hmi-blink {
+    50% {
+        fill: #7f1d1d;
+    }
+}
+
+/* Ventil */
+.hmi-valve-body {
+    fill: #334155;
+    stroke: #cbd5e1;
+    stroke-width: 1.8;
+    stroke-linejoin: round;
+    transition: fill .25s;
+}
+
+.hmi-valve-stem {
+    stroke: #94a3b8;
+    stroke-width: 2;
+}
+
+.hmi-valve-actuator {
+    fill: #1e293b;
+    stroke: #94a3b8;
+    stroke-width: 1.5;
+}
+
+.hmi-valve--open .hmi-valve-body {
+    fill: #16a34a;
+}
+
+.hmi-valve--locked .hmi-valve-body {
+    fill: #b45309;
+}
+
+/* Verbraucher */
+.hmi-consumer {
+    fill: #0f172a;
+    stroke: #475569;
+    stroke-width: 1.5;
+}
+
+.hmi-consumer-icon {
+    fill: #64748b;
+    transition: fill .3s;
+}
+
+.hmi-consumer-icon.is-active {
+    fill: #7dd3fc;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hmi-flow.is-active,
+    .hmi-wave,
+    .hmi-pump--run .hmi-pump-halo,
+    .hmi-pump--fault .hmi-pump-body {
+        animation: none;
+    }
+}

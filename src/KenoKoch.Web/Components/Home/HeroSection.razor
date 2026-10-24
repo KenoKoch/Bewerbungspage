@@ -1,0 +1,111 @@
+@using Microsoft.AspNetCore.Http
+@inject ProfileStore Profiles
+@inject RuntimeInfoService Runtime
+
+<section class="hero" aria-labelledby="hero-title">
+    <div class="hero__bg" aria-hidden="true">
+        <div class="hero__grid"></div>
+        <div class="hero__orb hero__orb--1"></div>
+        <div class="hero__orb hero__orb--2"></div>
+        <div class="hero__orb hero__orb--3"></div>
+    </div>
+
+    <div class="container hero__inner">
+        <div class="hero__content">
+            @if (!string.IsNullOrWhiteSpace(Profile.Availability))
+            {
+                <a class="pill" href="/#kontakt">
+                    <span class="pill__dot" aria-hidden="true"></span>
+                    <span>@Profile.Availability</span>
+                    <Icon Name="arrow-right" Size="14" />
+                </a>
+            }
+
+            <p class="hero__hello">Hallo, ich bin <strong>@Profile.Name</strong></p>
+
+            <h1 id="hero-title" class="hero__title" tabindex="-1">
+                <span class="visually-hidden">Ich entwickle Plattformen, Business-Apps, Web-APIs und Oberflächen mit C# und .NET.</span>
+                <span aria-hidden="true">
+                    Ich entwickle
+                    <span class="rotator">
+                        <span class="rotator__track">
+                            <span>Plattformen</span>
+                            <span>Business-Apps</span>
+                            <span>Web-APIs</span>
+                            <span>Oberflächen</span>
+                            <span>Plattformen</span>
+                        </span>
+                    </span>
+                    <br />mit <span class="text-gradient">C# und .NET</span>.
+                </span>
+            </h1>
+
+            <p class="hero__lead">@Profile.Tagline</p>
+
+            <div class="hero__actions">
+                <a class="btn btn--primary btn--lg" href="/demos">Live-Demos ansehen <Icon Name="arrow-right" Size="18" /></a>
+                <a class="btn btn--secondary btn--lg" href="/#werdegang">Werdegang</a>
+                <div class="social social--hero">
+                    <SocialLinks Profile="Profile" />
+                </div>
+            </div>
+
+            <ul class="hero__stack" aria-label="Tech-Stack">
+                <li><Icon Name="dotnet" Size="18" /> .NET 10</li>
+                <li><Icon Name="code" Size="15" /> C# 14</li>
+                <li><Icon Name="blazor" Size="15" /> Blazor</li>
+                <li><Icon Name="database" Size="15" /> EF Core &amp; SQL Server</li>
+                <li><Icon Name="cloud" Size="15" /> Azure</li>
+                <li class="hero__stack-plc"><Icon Name="factory" Size="15" /> Siemens S7</li>
+            </ul>
+        </div>
+
+        <div class="hero__visual">
+            <div class="hero__window">
+                <CodeBlock Code="@SourceSnippets.ProgramComposition"
+                           Title="Program.cs – genau so läuft diese Seite"
+                           Language="CodeLanguage.CSharp"
+                           Animate="true"
+                           Compact="true"
+                           Highlight="8-12" />
+            </div>
+
+            <div class="float-card float-card--cloud" aria-hidden="true">
+                <span class="float-card__icon"><Icon Name="cloud" Size="18" /></span>
+                <span class="float-card__text">
+                    <strong>@Runtime.Hosting.Platform</strong>
+                    <span>@(Runtime.Hosting.Region ?? Runtime.Hosting.Platform switch { "Lokale Entwicklung" => "localhost", _ => "Azure" })</span>
+                </span>
+            </div>
+
+            <div class="float-card float-card--render" aria-hidden="true">
+                <span class="float-card__icon"><Icon Name="zap" Size="18" /></span>
+                <span class="float-card__text">
+                    <strong>Static SSR + Inseln</strong>
+                    <span>Server-Render: @(_renderTime is { } t ? Fmt.Milliseconds(t) : "–")</span>
+                </span>
+            </div>
+
+            <div class="float-card float-card--db" aria-hidden="true">
+                <span class="float-card__icon"><Icon Name="database" Size="18" /></span>
+                <span class="float-card__text">
+                    <strong>Azure SQL</strong>
+                    <span>EF Core 10 · Serverless</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <a class="hero__scroll" href="/#ueber-mich" aria-label="Weiter zu „Über mich“"><span></span></a>
+</section>
+
+@code {
+    private TimeSpan? _renderTime;
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private ProfileData Profile => Profiles.Profile;
+
+    protected override void OnInitialized() => _renderTime = HttpContext?.GetElapsedSinceRequestStart();
+}

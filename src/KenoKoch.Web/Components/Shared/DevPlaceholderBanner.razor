@@ -1,0 +1,17 @@
+@inject IHostEnvironment Environment
+@inject ProfileStore Profiles
+
+@* Nur in der Entwicklung sichtbar: erinnert an noch offene Platzhalter in profile.json. *@
+@if (Environment.IsDevelopment() && Profiles.OpenPlaceholders.Count > 0)
+{
+    <details class="dev-banner">
+        <summary><Icon Name="alert" Size="15" /> @Profiles.OpenPlaceholders.Count Platzhalter offen</summary>
+        <p>Diese Werte in <code>src/Modules/Profile/KenoKoch.Modules.Profile/Data/profile.json</code> ersetzen (Hinweis erscheint nur im Development-Modus):</p>
+        <ul>
+            @foreach (var placeholder in Profiles.OpenPlaceholders)
+            {
+                <li><code>@placeholder</code></li>
+            }
+        </ul>
+    </details>
+}

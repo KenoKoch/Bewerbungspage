@@ -1,0 +1,40 @@
+@* Inline-SVG-Icon. Dekorativ (aria-hidden), außer es wird ein Title übergeben. *@
+<svg class="icon @Class"
+     width="@Size"
+     height="@Size"
+     viewBox="0 0 24 24"
+     fill="@(_filled ? "currentColor" : "none")"
+     stroke="@(_filled ? "none" : "currentColor")"
+     stroke-width="@StrokeWidth.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     focusable="false"
+     aria-hidden="@(Title is null ? "true" : null)"
+     role="@(Title is null ? null : "img")">
+    @if (Title is not null)
+    {
+        <title>@Title</title>
+    }
+    @((MarkupString)IconSet.Get(Name))
+</svg>
+
+@code {
+    private bool _filled;
+
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = "sparkles";
+
+    [Parameter]
+    public int Size { get; set; } = 20;
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public double StrokeWidth { get; set; } = 1.8;
+
+    protected override void OnParametersSet() => _filled = IconSet.IsFilled(Name);
+}

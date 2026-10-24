@@ -1,0 +1,144 @@
+@using System.Diagnostics
+@using System.Text
+@using System.Text.Json
+@inject HttpClient Http
+
+<div class="api">
+    <ul class="api__list" role="listbox" aria-label="Endpunkte">
+        @foreach (var endpoint in Endpoints)
+        {
+            var current = endpoint;
+            <li>
+                <button type="button"
+                        class="api__endpoint @(_selected == current ? "is-active" : null)"
+                        role="option"
+                        aria-selected="@(_selected == current ? "true" : "false")"
+                        @onclick="() => SelectAsync(current)">
+                    <span class="api__method">GET</span>
+                    <span class="api__path">@current.Path</span>
+                    <span class="api__module">@current.Module</span>
+                </button>
+            </li>
+        }
+    </ul>
+
+    <div class="api__console">
+        <div class="api__request">
+            <span class="api__method">GET</span>
+            <code class="api__url">@_selected.Path</code>
+            <button type="button" class="btn btn--primary btn--sm" disabled="@_loading" @onclick="SendAsync">
+                @if (_loading)
+                {
+                    <span class="spinner spinner--sm" aria-hidden="true"></span>
+                }
+                else
+                {
+                    <Icon Name="send" Size="14" />
+                }
+                Senden
+            </button>
+        </div>
+        <p class="api__description">@_selected.Description</p>
+
+        <div class="api__meta" aria-live="polite">
+            @if (_status is not null)
+            {
+                <span class="api__status @(_status < 400 ? "is-ok" : "is-error")">@_status @_reason</span>
+                <span><Icon Name="clock" Size="13" /> @Fmt.Milliseconds(_elapsed)</span>
+                <span><Icon Name="download" Size="13" /> @Fmt.Bytes(_bytes)</span>
+                <span class="api__type">@_contentType</span>
+            }
+            else
+            {
+                <span>Antwort erscheint hier – der Aufruf erfolgt per <code>HttpClient</code> direkt aus WebAssembly.</span>
+            }
+        </div>
+
+        <CodeBlock Code="@_body" Language="@(_isJson ? CodeLanguage.Json : CodeLanguage.Plain)" HideHeader="true" Compact="true" MaxHeight="380px" Class="api__body" />
+    </div>
+</div>
+
+@code {
+    private sealed record ApiEndpoint(string Path, string Module, string Description);
+
+    private static readonly ApiEndpoint[] Endpoints =
+    [
+        new("/api/stats", "Besucher & Echtzeit", "Live-Besucher (Blazor-Circuits), Seitenaufrufe aus Azure SQL und der Verlauf der letzten 14 Tage."),
+        new("/api/profile", "Profil", "Der komplette Lebenslauf als JSON – dieselbe Datenquelle, aus der die Seite gerendert wird."),
+        new("/api/guestbook?take=3", "Gästebuch", "Die neuesten freigegebenen Gästebucheinträge, gelesen mit EF Core."),
+        new("/api/modules", "Plattform", "Alle Module des modularen Monolithen mit Schema, Migrationen, Events und Endpunkten."),
+        new("/api/runtime", "Plattform", "Hosting- und Laufzeitinformationen: Azure-Region, .NET-Version, Speicher und Datenbank-Latenz."),
+        new("/api/plc/status", "SPS-Simulator", "Wie viele Besucher-SPSen gerade auf dem Server laufen."),
+        new("/health/ready", "Plattform", "Health Check inklusive Datenbank und Migrationsstand jedes Moduls."),
+    ];
+
+    private static readonly JsonWriterOptions PrettyJson = new() { Indented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
+    private ApiEndpoint _selected = Endpoints[0];
+    private bool _loading;
+    private int? _status;
+    private string? _reason;
+    private double _elapsed;
+    private long _bytes;
+    private string? _contentType;
+    private bool _isJson = true;
+    private string _body = "// Endpunkt wählen und auf \"Senden\" klicken";
+
+    protected override Task OnInitializedAsync() => SendAsync();
+
+    private Task SelectAsync(ApiEndpoint endpoint)
+    {
+        _selected = endpoint;
+        return SendAsync();
+    }
+
+    private async Task SendAsync()
+    {
+        _loading = true;
+        try
+        {
+            var stopwatch = Stopwatch.StartNew();
+            using var response = await Http.GetAsync(_selected.Path.TrimStart('/'));
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            stopwatch.Stop();
+
+            _status = (int)response.StatusCode;
+            _reason = response.ReasonPhrase;
+            _elapsed = stopwatch.Elapsed.TotalMilliseconds;
+            _bytes = bytes.LongLength;
+            _contentType = response.Content.Headers.ContentType?.MediaType;
+            _isJson = _contentType?.Contains("json", StringComparison.OrdinalIgnoreCase) == true;
+            _body = _isJson ? Prettify(bytes) : Encoding.UTF8.GetString(bytes);
+        }
+        catch (Exception ex)
+        {
+            _status = null;
+            _isJson = false;
+            _body = $"Anfrage fehlgeschlagen: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static string Prettify(byte[] json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            using var stream = new MemoryStream();
+            using (var writer = new Utf8JsonWriter(stream, PrettyJson))
+            {
+                document.WriteTo(writer);
+            }
+
+            var text = Encoding.UTF8.GetString(stream.ToArray());
+            return text.Length > 12_000 ? text[..12_000] + "\n… (gekürzt)" : text;
+        }
+        catch (JsonException)
+        {
+            return Encoding.UTF8.GetString(json);
+        }
+    }
+}

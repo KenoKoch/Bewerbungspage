@@ -1,0 +1,36 @@
+<div class="io-table">
+    <h5 class="io-table__title">@Title</h5>
+    <table>
+        <thead>
+            <tr><th scope="col">Adresse</th><th scope="col">Symbol</th><th scope="col">Kommentar</th><th scope="col" class="num">Wert</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var point in Points)
+            {
+                <tr>
+                    <td><code>@point.Address</code></td>
+                    <td><code class="io-table__symbol">"@point.Symbol"</code></td>
+                    <td class="io-table__comment">@point.Comment</td>
+                    <td class="num">
+                        @if (point.Bit is { } bit)
+                        {
+                            <span class="io-bit @(bit ? "is-on" : null)" aria-label="@(bit ? "1" : "0")">@point.Value</span>
+                        }
+                        else
+                        {
+                            <code class="io-table__word">@point.Value</code>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<IoPoint> Points { get; set; } = [];
+}

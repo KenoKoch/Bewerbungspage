@@ -1,0 +1,225 @@
+.live-badge {
+    position: relative;
+}
+
+.live-badge__button {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    height: 36px;
+    padding: 0 .8rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: .8125rem;
+    cursor: pointer;
+    transition: border-color .2s, background .2s, transform .2s;
+}
+
+.live-badge__button:hover,
+.live-badge__button[aria-expanded="true"] {
+    border-color: rgba(52, 211, 153, .5);
+    background: var(--surface-2);
+}
+
+.live-badge__count {
+    font-weight: 700;
+    min-width: .6em;
+    text-align: center;
+}
+
+.live-badge__label {
+    color: var(--text-muted);
+}
+
+.live-badge__bursts {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.reaction-burst {
+    position: absolute;
+    left: -.6em;
+    top: 0;
+    font-size: 1.5rem;
+    animation: burst-rise 2.6s cubic-bezier(.2, .7, .3, 1) forwards;
+}
+
+@keyframes burst-rise {
+    0% {
+        opacity: 0;
+        transform: translate(0, 10px) scale(.4);
+    }
+
+    15% {
+        opacity: 1;
+        transform: translate(calc(var(--drift) * .3), 30px) scale(1.15);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(var(--drift), 110px) scale(.9);
+    }
+}
+
+.live-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    border: 0;
+    background: transparent;
+    cursor: default;
+}
+
+.live-popover {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 12px);
+    z-index: 61;
+    width: min(360px, calc(100vw - 32px));
+    padding: 1.1rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-strong);
+    background: var(--bg-elev);
+    box-shadow: var(--shadow-xl);
+    display: grid;
+    gap: .9rem;
+    animation: popover-in .22s cubic-bezier(.2, .8, .2, 1);
+}
+
+@keyframes popover-in {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(.98);
+    }
+}
+
+.live-popover__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 1rem;
+}
+
+.live-popover__head strong {
+    display: block;
+    font-size: 1rem;
+}
+
+.live-popover__sub {
+    font-size: .78rem;
+    color: var(--text-muted);
+}
+
+.live-popover__stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .6rem;
+}
+
+.live-popover__stats > div {
+    padding: .7rem .8rem;
+    border-radius: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: grid;
+}
+
+.live-popover__value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.live-popover__caption {
+    font-size: .75rem;
+    color: var(--text-muted);
+}
+
+.live-popover__intro {
+    margin: 0;
+    font-size: .8rem;
+    color: var(--text-muted);
+}
+
+.live-popover__empty {
+    margin: 0;
+    font-size: .85rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: .6rem;
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+}
+
+.live-popover__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: .5rem;
+}
+
+.live-popover__list li {
+    display: grid;
+    grid-template-columns: 26px 1fr auto;
+    gap: .55rem;
+    align-items: center;
+    font-size: .8rem;
+}
+
+.live-popover__icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: var(--surface-2);
+    color: var(--accent-2);
+}
+
+.live-popover__icon--plc {
+    color: var(--plc);
+}
+
+.live-popover__icon--alarm {
+    color: var(--danger);
+}
+
+.live-popover__icon--guestbook {
+    color: var(--accent-1);
+}
+
+.live-popover__text {
+    color: var(--text);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.live-popover__list time {
+    color: var(--text-faint);
+    font-size: .72rem;
+    white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+    .live-badge__label {
+        display: none;
+    }
+
+    .live-popover {
+        position: fixed;
+        right: 16px;
+        left: 16px;
+        top: 72px;
+        width: auto;
+    }
+}

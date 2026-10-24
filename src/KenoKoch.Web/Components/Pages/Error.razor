@@ -1,0 +1,27 @@
+@page "/Error"
+@using System.Diagnostics
+@using Microsoft.AspNetCore.Http
+
+<SeoHead Title="Fehler" Description="Es ist ein Fehler aufgetreten." Path="/Error" NoIndex="true" />
+
+<section class="status-page container">
+    <div class="status-page__code" aria-hidden="true">500</div>
+    <h1 tabindex="-1">Da ist etwas schiefgelaufen.</h1>
+    <p>Der Fehler wurde protokolliert. Bitte versuchen Sie es in einem Moment erneut.</p>
+    @if (!string.IsNullOrEmpty(RequestId))
+    {
+        <p class="status-page__meta">Request-ID: <code>@RequestId</code></p>
+    }
+    <div class="status-page__actions">
+        <a class="btn btn--primary" href="/">Zur Startseite</a>
+    </div>
+</section>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? RequestId { get; set; }
+
+    protected override void OnInitialized() => RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+}

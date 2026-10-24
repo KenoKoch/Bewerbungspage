@@ -1,0 +1,130 @@
+FUNCTION_BLOCK "FB_TankControl"
+TITLE = Tankanlage T1 - Füllstandregelung mit Verriegelungen
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'K. Koch'
+VERSION : 1.0
+   VAR_INPUT
+      iStart : Bool;              // %I0.0  Taster Start (Schließer)
+      iStop : Bool := TRUE;       // %I0.1  Taster Stop (Öffner)
+      iEStopOk : Bool := TRUE;    // %I0.2  NOT-HALT-Kreis geschlossen
+      iAck : Bool;                // %I0.3  Taster Quittieren
+      iAuto : Bool := TRUE;       // %I0.4  Wahlschalter AUTO/HAND
+      iManPump : Bool;            // %I0.5  Handbefehl Pumpe P1
+      iManValve : Bool;           // %I0.6  Handbefehl Ventil V1
+      iLevelHH : Bool;            // %I1.0  Überfüllsicherung LSHH
+      iMotorOk : Bool := TRUE;    // %I1.1  Motorschutz P1 (Öffner)
+      iLevelRaw : Int;            // %IW64  Füllstand 0..27648
+   END_VAR
+
+   VAR_OUTPUT
+      qPump : Bool;               // %Q0.0  Schütz Pumpe P1
+      qValve : Bool;              // %Q0.1  Magnetventil V1
+      qHorn : Bool;               // %Q0.2  Hupe
+      qFaultLamp : Bool;          // %Q0.3  Leuchtmelder Störung
+      qRunLamp : Bool;            // %Q0.4  Leuchtmelder Anlage EIN
+      qLevel : Real;              // Füllstand in %
+      qAlarmEStop : Bool;         // Meldebit NOT-HALT
+      qAlarmMotor : Bool;         // Meldebit Motorschutz P1
+      qAlarmLevelHH : Bool;       // Meldebit Überfüllsicherung
+      qWarnDryRun : Bool;         // Meldebit Trockenlaufschutz
+   END_VAR
+
+   VAR
+      sRunning : Bool;
+      sPumpDemand : Bool;
+      sEStopLatched : Bool;
+      sMotorLatched : Bool;
+      sLevelHHLatched : Bool;
+      sAckPrev : Bool;
+      sFaultPrev : Bool;
+      sHornLatched : Bool;
+      sLevelLow : Real := 20.0;   // Pumpe EIN unterhalb [%]
+      sLevelHigh : Real := 80.0;  // Pumpe AUS oberhalb [%]
+      sDryRunLimit : Real := 8.0; // Ventil gesperrt unterhalb [%]
+   END_VAR
+
+   VAR_TEMP
+      tAckEdge : Bool;
+      tShutdown : Bool;
+      tFault : Bool;
+   END_VAR
+
+
+BEGIN
+	REGION Analogwert skalieren
+	    // 0..27648 -> 0.0..100.0 %
+	    #qLevel := SCALE_X(MIN := 0.0, VALUE := NORM_X(MIN := 0, VALUE := #iLevelRaw, MAX := 27648), MAX := 100.0);
+	END_REGION
+
+	REGION Quittierung (positive Flanke)
+	    #tAckEdge := #iAck AND NOT #sAckPrev;
+	    #sAckPrev := #iAck;
+	END_REGION
+
+	REGION Störungen speichern
+	    IF NOT #iEStopOk THEN
+	        #sEStopLatched := TRUE;
+	    ELSIF #tAckEdge THEN
+	        #sEStopLatched := FALSE;
+	    END_IF;
+
+	    IF NOT #iMotorOk THEN
+	        #sMotorLatched := TRUE;
+	    ELSIF #tAckEdge THEN
+	        #sMotorLatched := FALSE;
+	    END_IF;
+
+	    IF #iLevelHH THEN
+	        #sLevelHHLatched := TRUE;
+	    ELSIF #tAckEdge THEN
+	        #sLevelHHLatched := FALSE;
+	    END_IF;
+
+	    #tShutdown := #sEStopLatched OR #sMotorLatched;
+	END_REGION
+
+	REGION Anlage EIN/AUS (rücksetzdominant)
+	    IF NOT #iStop OR #tShutdown THEN
+	        #sRunning := FALSE;
+	    ELSIF #iStart THEN
+	        #sRunning := TRUE;
+	    END_IF;
+	END_REGION
+
+	REGION Pumpe: Zweipunktregelung / Handbetrieb
+	    IF #sRunning AND #iAuto THEN
+	        IF #qLevel <= #sLevelLow THEN
+	            #sPumpDemand := TRUE;
+	        ELSIF #qLevel >= #sLevelHigh THEN
+	            #sPumpDemand := FALSE;
+	        END_IF;
+	    ELSE
+	        #sPumpDemand := #sRunning AND #iManPump;
+	    END_IF;
+	END_REGION
+
+	REGION Verriegelungen (gelten auch im Handbetrieb)
+	    #qPump := #sPumpDemand AND NOT #iLevelHH AND NOT #sMotorLatched;
+	    #qValve := #sRunning AND (#iAuto OR #iManValve) AND #qLevel > #sDryRunLimit;
+	END_REGION
+
+	REGION Meldungen und Hupe
+	    #qAlarmEStop := #sEStopLatched;
+	    #qAlarmMotor := #sMotorLatched;
+	    #qAlarmLevelHH := #sLevelHHLatched;
+	    #qWarnDryRun := #sRunning AND #qLevel <= #sDryRunLimit;
+
+	    #tFault := #sEStopLatched OR #sMotorLatched OR #sLevelHHLatched;
+	    IF #tFault AND NOT #sFaultPrev THEN
+	        #sHornLatched := TRUE;
+	    END_IF;
+	    IF #tAckEdge OR NOT #tFault THEN
+	        #sHornLatched := FALSE;
+	    END_IF;
+	    #sFaultPrev := #tFault;
+
+	    #qHorn := #sHornLatched;
+	    #qFaultLamp := #tFault;
+	    #qRunLamp := #sRunning;
+	END_REGION
+END_FUNCTION_BLOCK

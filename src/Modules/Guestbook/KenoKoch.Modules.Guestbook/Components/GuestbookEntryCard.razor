@@ -1,0 +1,38 @@
+<li class="gb-entry @(Pending ? "gb-entry--pending" : null)">
+    <div class="gb-entry__avatar" style="--hue:@Hue" aria-hidden="true">@Initials</div>
+    <div class="gb-entry__body">
+        <div class="gb-entry__head">
+            <strong class="gb-entry__name">@Entry.Name</strong>
+            @if (!string.IsNullOrWhiteSpace(Entry.Company))
+            {
+                <span class="gb-entry__company">@Entry.Company</span>
+            }
+            <span class="gb-entry__role"><Icon Name="@Entry.RoleIcon" Size="12" /> @Entry.RoleLabel</span>
+            <time class="gb-entry__time" datetime="@Entry.CreatedAt.ToString("O")" title="@Fmt.DateTime(Entry.CreatedAt)">@Fmt.Relative(Entry.CreatedAt, Now)</time>
+        </div>
+        <p class="gb-entry__message">@Entry.Message</p>
+        @if (Pending)
+        {
+            <span class="badge badge--warn"><Icon Name="clock" Size="12" /> Wartet auf Freigabe – vorerst nur für Sie sichtbar</span>
+        }
+    </div>
+</li>
+
+@code {
+    [Parameter, EditorRequired]
+    public GuestbookEntryDto Entry { get; set; } = default!;
+
+    [Parameter]
+    public bool Pending { get; set; }
+
+    [Parameter]
+    public DateTimeOffset Now { get; set; } = DateTimeOffset.UtcNow;
+
+    private string Initials => string.Concat(Entry.Name
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Take(2)
+        .Select(part => char.ToUpperInvariant(part[0])));
+
+    // Stabiler Farbton pro Name (string.GetHashCode ist in .NET pro Prozess randomisiert).
+    private int Hue => Entry.Name.Aggregate(17, (hash, c) => unchecked(hash * 31 + c)) is var h ? Math.Abs(h % 360) : 0;
+}

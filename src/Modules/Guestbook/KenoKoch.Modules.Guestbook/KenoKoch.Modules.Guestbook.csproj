@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <Description>Modul "Gästebuch": Einträge von Besuchern mit EF Core in einem eigenen Datenbankschema.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\KenoKoch.BuildingBlocks\KenoKoch.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\..\KenoKoch.UI\KenoKoch.UI.csproj" />
+    <ProjectReference Include="..\KenoKoch.Modules.Guestbook.Contracts\KenoKoch.Modules.Guestbook.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Wird auf der Architektur-Seite als Beispiel eines kompletten Moduls angezeigt -->
+    <EmbeddedResource Include="GuestbookModule.cs" LogicalName="GuestbookModule.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="KenoKoch.Tests" />
+  </ItemGroup>
+
+</Project>

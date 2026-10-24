@@ -1,0 +1,327 @@
+@using Microsoft.Extensions.Logging
+@implements IDisposable
+@inject GuestbookService Guestbook
+@inject DatabaseState Database
+@inject TimeProvider Time
+@inject ILogger<GuestbookDemo> Logger
+
+<div class="gb">
+    <div class="gb__grid">
+        <section class="card gb__panel" aria-labelledby="gb-form-title">
+            <header class="gb__panel-head">
+                <span class="icon-tile"><Icon Name="message" Size="20" /></span>
+                <div>
+                    <h3 id="gb-form-title">Hinterlassen Sie einen Gruß</h3>
+                    <p>Validiert mit DataAnnotations, gespeichert mit EF Core.</p>
+                </div>
+            </header>
+
+            <EditForm Model="_model" OnValidSubmit="SubmitAsync" FormName="guestbook" class="gb__form">
+                <DataAnnotationsValidator />
+
+                <div class="field">
+                    <label for="gb-name">Name</label>
+                    <InputText id="gb-name" class="input" @bind-Value="_model.Name" placeholder="z. B. Maria Muster" maxlength="60" autocomplete="name" />
+                    <ValidationMessage For="() => _model.Name" class="field__error" />
+                </div>
+
+                <div class="field">
+                    <label for="gb-company">Unternehmen <span class="field__optional">optional</span></label>
+                    <InputText id="gb-company" class="input" @bind-Value="_model.Company" placeholder="z. B. Muster GmbH" maxlength="80" autocomplete="organization" />
+                    <ValidationMessage For="() => _model.Company" class="field__error" />
+                </div>
+
+                <fieldset class="field">
+                    <legend>Ich bin …</legend>
+                    <div class="segmented" role="group" aria-label="Besucherrolle">
+                        @foreach (var role in Enum.GetValues<VisitorRole>())
+                        {
+                            var current = role;
+                            <button type="button"
+                                    class="segmented__item @(_model.Role == current ? "is-active" : null)"
+                                    aria-pressed="@(_model.Role == current ? "true" : "false")"
+                                    @onclick="() => _model.Role = current">
+                                <Icon Name="@current.Icon()" Size="14" />
+                                <span>@current.Label()</span>
+                            </button>
+                        }
+                    </div>
+                </fieldset>
+
+                <div class="field">
+                    <label for="gb-message">Nachricht</label>
+                    <InputTextArea id="gb-message" class="input input--area" rows="4" maxlength="500"
+                                   @bind-Value="_model.Message"
+                                   @oninput="OnMessageInput"
+                                   placeholder="Was möchten Sie mir sagen?" />
+                    <div class="field__hint">
+                        <span>Bitte keine Links – das hält Spam fern.</span>
+                        <span class="@(_messageLength > 450 ? "field__count--warn" : null)">@_messageLength / 500</span>
+                    </div>
+                    <ValidationMessage For="() => _model.Message" class="field__error" />
+                </div>
+
+                @* Honeypot: für Menschen unsichtbar, Bots füllen es gerne aus. *@
+                <div class="gb__hp" aria-hidden="true">
+                    <label for="gb-website">Website</label>
+                    <InputText id="gb-website" @bind-Value="_model.Website" tabindex="-1" autocomplete="off" />
+                </div>
+
+                <label class="checkbox">
+                    <InputCheckbox @bind-Value="_model.ConsentToPublish" />
+                    <span>Name, Unternehmen und Nachricht dürfen öffentlich angezeigt werden. Mehr dazu in der <a href="/datenschutz">Datenschutzerklärung</a>.</span>
+                </label>
+                <ValidationMessage For="() => _model.ConsentToPublish" class="field__error" />
+
+                @if (_error is not null)
+                {
+                    <p class="alert alert--error" role="alert"><Icon Name="alert" Size="16" /> @_error</p>
+                }
+                @if (_success is not null)
+                {
+                    <p class="alert alert--success" role="status"><Icon Name="check-circle" Size="16" /> @_success</p>
+                }
+
+                <button type="submit" class="btn btn--primary gb__submit" disabled="@(!CanSubmit)">
+                    @if (_submitting)
+                    {
+                        <span class="spinner" aria-hidden="true"></span>
+                        <span>Wird gespeichert …</span>
+                    }
+                    else
+                    {
+                        <Icon Name="send" Size="16" />
+                        <span>Eintrag absenden</span>
+                    }
+                </button>
+            </EditForm>
+        </section>
+
+        <section class="card gb__panel" aria-labelledby="gb-list-title">
+            <header class="gb__panel-head">
+                <span class="icon-tile"><Icon Name="users" Size="20" /></span>
+                <div>
+                    <h3 id="gb-list-title">Einträge</h3>
+                    <p>
+                        @if (_page is not null)
+                        {
+                            <span>@Fmt.Number(_page.TotalCount) freigegeben · geladen in @Fmt.Milliseconds(_page.Query.Duration)</span>
+                        }
+                        else
+                        {
+                            <span>Live aus der Datenbank</span>
+                        }
+                    </p>
+                </div>
+            </header>
+
+            @if (!RendererInfo.IsInteractive || _loading)
+            {
+                <ul class="gb-skeleton" aria-hidden="true">
+                    @for (var i = 0; i < 3; i++)
+                    {
+                        <li><span class="skeleton skeleton--avatar"></span><span class="skeleton skeleton--text"></span></li>
+                    }
+                </ul>
+            }
+            else if (!Database.IsReady)
+            {
+                <DatabaseStatusNotice Status="@Database.Status.ToString()" Message="@Database.Message" />
+            }
+            else if (_loadError is not null)
+            {
+                <p class="alert alert--error">@_loadError</p>
+            }
+            else
+            {
+                <ul class="gb-list">
+                    @foreach (var entry in _ownEntries)
+                    {
+                        <GuestbookEntryCard @key="@($"own-{entry.Id}")" Entry="entry" Pending="true" Now="_now" />
+                    }
+                    @foreach (var entry in _page?.Entries ?? [])
+                    {
+                        <GuestbookEntryCard @key="entry.Id" Entry="entry" Now="_now" />
+                    }
+                </ul>
+            }
+        </section>
+    </div>
+
+    <section class="sql-inspector" aria-label="SQL-Inspector">
+        <header class="sql-inspector__head">
+            <span class="sql-inspector__title"><Icon Name="database" Size="16" /> SQL-Inspector</span>
+            <div class="tabs" role="tablist">
+                <button type="button" role="tab" class="tabs__item @(_sqlTab == SqlTab.Select ? "is-active" : null)"
+                        aria-selected="@(_sqlTab == SqlTab.Select ? "true" : "false")" @onclick="() => _sqlTab = SqlTab.Select">
+                    SELECT · Einträge laden
+                </button>
+                <button type="button" role="tab" class="tabs__item @(_sqlTab == SqlTab.Insert ? "is-active" : null)"
+                        aria-selected="@(_sqlTab == SqlTab.Insert ? "true" : "false")" @onclick="() => _sqlTab = SqlTab.Insert">
+                    INSERT · Ihr Eintrag
+                </button>
+            </div>
+            <span class="sql-inspector__meta">@InspectorMeta</span>
+        </header>
+
+        <CodeBlock Code="@InspectorSql" Language="CodeLanguage.Sql" HideHeader="true" Compact="true" MaxHeight="300px" Class="sql-inspector__code" />
+
+        @if (_sqlTab == SqlTab.Insert && _lastInsert.Count > 0 && _lastInsert[0].Parameters.Count > 0)
+        {
+            <div class="sql-inspector__params">
+                <span class="sql-inspector__params-title">Parameter</span>
+                <dl>
+                    @foreach (var parameter in _lastInsert[0].Parameters)
+                    {
+                        <div>
+                            <dt>@parameter.Name</dt>
+                            <dd title="@parameter.DbType">@parameter.Value</dd>
+                        </div>
+                    }
+                </dl>
+            </div>
+        }
+    </section>
+</div>
+
+@code {
+    private enum SqlTab
+    {
+        Select,
+        Insert,
+    }
+
+    private GuestbookSubmission _model = new();
+    private GuestbookPage? _page;
+    private readonly List<GuestbookEntryDto> _ownEntries = [];
+    private IReadOnlyList<CapturedSqlCommand> _lastInsert = [];
+    private SqlTab _sqlTab = SqlTab.Select;
+    private bool _loading = true;
+    private bool _submitting;
+    private string? _error;
+    private string? _success;
+    private string? _loadError;
+    private int _messageLength;
+    private string _server = "SQL Server";
+    private DateTimeOffset _now;
+
+    /// <summary>Anonymer, serverseitig berechneter Schlüssel des Besuchers für das Rate Limiting.</summary>
+    [Parameter]
+    public string VisitorKey { get; set; } = "anonymous";
+
+    private bool CanSubmit => RendererInfo.IsInteractive && !_submitting && Database.IsReady;
+
+    private string InspectorSql => _sqlTab switch
+    {
+        SqlTab.Select when _page is not null => _page.Query.Sql,
+        SqlTab.Select => "-- Die Abfrage wird ausgeführt, sobald die Komponente interaktiv ist.",
+        _ when _lastInsert.Count > 0 => string.Join("\n\n", _lastInsert.Select(c => c.CommandText.Trim())),
+        _ => "-- Schicken Sie einen Eintrag ab, um das von EF Core erzeugte INSERT-Statement zu sehen.",
+    };
+
+    private string InspectorMeta => _sqlTab switch
+    {
+        SqlTab.Select when _page is not null => $"{Fmt.Milliseconds(_page.Query.Duration)} · {_page.Query.Rows} Zeilen · EF Core → {_server}",
+        SqlTab.Insert when _lastInsert.Count > 0 => $"{Fmt.Milliseconds(_lastInsert.Sum(c => c.Duration.TotalMilliseconds))} · EF Core → {_server}",
+        _ => $"EF Core → {_server}",
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _now = Time.GetUtcNow();
+        Database.Changed += OnDatabaseChanged;
+
+        if (!RendererInfo.IsInteractive)
+        {
+            // Beim Prerendering keine Datenbankabfrage – Crawler und Health-Probes wecken so keine Serverless-Datenbank.
+            return;
+        }
+
+        _server = Guestbook.DescribeServer();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (!Database.IsReady)
+        {
+            _loading = false;
+            return;
+        }
+
+        _loading = _page is null;
+        try
+        {
+            _page = await Guestbook.GetLatestAsync(8);
+            _loadError = null;
+            _now = Time.GetUtcNow();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Gästebucheinträge konnten nicht geladen werden.");
+            _loadError = "Die Einträge konnten gerade nicht geladen werden. Bitte versuchen Sie es gleich noch einmal.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        _submitting = true;
+        _error = null;
+        _success = null;
+
+        try
+        {
+            var result = await Guestbook.SubmitAsync(_model, VisitorKey);
+            if (!result.Succeeded || result.Entry is null)
+            {
+                _error = result.Error;
+                return;
+            }
+
+            _lastInsert = result.Commands;
+            _sqlTab = SqlTab.Insert;
+
+            if (result.Entry.IsApproved)
+            {
+                await LoadAsync();
+                _success = "Danke! Ihr Eintrag ist jetzt für alle sichtbar.";
+            }
+            else
+            {
+                _ownEntries.Insert(0, result.Entry);
+                _success = "Danke! Ihr Eintrag erscheint nach einer kurzen Prüfung für alle Besucher.";
+            }
+
+            _now = Time.GetUtcNow();
+            _model = new GuestbookSubmission { Role = _model.Role };
+            _messageLength = 0;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Gästebucheintrag konnte nicht gespeichert werden.");
+            _error = "Speichern fehlgeschlagen – die Datenbank ist gerade nicht erreichbar.";
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    private void OnMessageInput(ChangeEventArgs args) => _messageLength = args.Value?.ToString()?.Length ?? 0;
+
+    private void OnDatabaseChanged() => _ = InvokeAsync(async () =>
+    {
+        if (Database.IsReady && _page is null && RendererInfo.IsInteractive)
+        {
+            await LoadAsync();
+        }
+
+        StateHasChanged();
+    });
+
+    public void Dispose() => Database.Changed -= OnDatabaseChanged;
+}

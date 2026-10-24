@@ -1,0 +1,260 @@
+@using System.Diagnostics
+@implements IDisposable
+@inject IJSRuntime JS
+
+<div class="mb">
+    <div class="mb__toolbar">
+        <div class="mb__presets" role="group" aria-label="Ausschnitt wählen">
+            <button type="button" class="chip chip--button" disabled="@_rendering" @onclick="Reset"><Icon Name="reset" Size="13" /> Gesamtansicht</button>
+            @foreach (var preset in Presets)
+            {
+                var current = preset;
+                <button type="button" class="chip chip--button" disabled="@_rendering" @onclick="() => GoTo(current)">@current.Name</button>
+            }
+        </div>
+        <label class="mb__iterations">
+            Iterationen
+            <select class="input input--sm" value="@_maxIterations" disabled="@_rendering" @onchange="OnIterationsChanged">
+                <option value="128">128</option>
+                <option value="256">256</option>
+                <option value="512">512</option>
+                <option value="1024">1.024</option>
+            </select>
+        </label>
+    </div>
+
+    <div class="mb__stage">
+        <canvas @ref="_canvas"
+                class="mb__canvas"
+                width="@Width"
+                height="@Height"
+                @onclick="OnCanvasClick"
+                @oncontextmenu="OnCanvasRightClick"
+                @oncontextmenu:preventDefault="true"
+                aria-label="Mandelbrot-Menge – klicken zum Hineinzoomen, Rechtsklick zum Herauszoomen"
+                role="img"></canvas>
+        @if (_rendering)
+        {
+            <div class="mb__progress" aria-hidden="true"><span style="width:@(_progress)%"></span></div>
+        }
+        <span class="mb__hint"><Icon Name="pointer" Size="13" /> Klick = hineinzoomen · Rechtsklick = heraus</span>
+    </div>
+
+    <dl class="mb__stats">
+        <div><dt>Rechenzeit</dt><dd>@(_elapsed is null ? "–" : Fmt.Milliseconds(_elapsed.Value))</dd></div>
+        <div><dt>Iterationen gesamt</dt><dd>@(_iterations == 0 ? "–" : $"{Fmt.Number(_iterations / 1_000_000d, 1)} Mio.")</dd></div>
+        <div><dt>Durchsatz</dt><dd>@Throughput</dd></div>
+        <div><dt>Zoom</dt><dd>×@Fmt.Number(3.0 / _scale, _scale < 0.003 ? 0 : 1)</dd></div>
+    </dl>
+</div>
+
+@code {
+    private sealed record Preset(string Name, double X, double Y, double Scale);
+
+    private const int Width = 640;
+    private const int Height = 400;
+    private const int RowsPerChunk = 20;
+
+    private static readonly Preset[] Presets =
+    [
+        new("Seepferdchental", -0.7453, 0.1127, 0.012),
+        new("Elefantental", 0.2850, 0.0110, 0.018),
+        new("Spirale", -0.7436447860, 0.1318252536, 0.0009),
+    ];
+
+    private ElementReference _canvas;
+    private double _centerX = -0.6;
+    private double _centerY;
+    private double _scale = 3.0;
+    private int _maxIterations = 256;
+    private bool _rendering;
+    private int _progress;
+    private double? _elapsed;
+    private long _iterations;
+    private int[] _palette = [];
+    private CancellationTokenSource? _cts;
+
+    private string Throughput => _elapsed is > 0
+        ? $"{Fmt.Number(_iterations / _elapsed.Value / 1000d, 1)} Mio./s"
+        : "–";
+
+    protected override void OnInitialized() => _palette = BuildPalette(_maxIterations);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await RenderAsync();
+        }
+    }
+
+    private Task Reset()
+    {
+        (_centerX, _centerY, _scale) = (-0.6, 0, 3.0);
+        return RenderAsync();
+    }
+
+    private Task GoTo(Preset preset)
+    {
+        (_centerX, _centerY, _scale) = (preset.X, preset.Y, preset.Scale);
+        return RenderAsync();
+    }
+
+    private Task OnIterationsChanged(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), out var iterations))
+        {
+            _maxIterations = Math.Clamp(iterations, 32, 4096);
+            _palette = BuildPalette(_maxIterations);
+        }
+
+        return RenderAsync();
+    }
+
+    private async Task OnCanvasClick(MouseEventArgs args) => await ZoomAtAsync(args, 0.4);
+
+    private async Task OnCanvasRightClick(MouseEventArgs args) => await ZoomAtAsync(args, 2.5);
+
+    private async Task ZoomAtAsync(MouseEventArgs args, double factor)
+    {
+        if (_rendering)
+        {
+            return;
+        }
+
+        // Darstellungsgröße des Canvas (CSS-Pixel) kann von der internen Auflösung abweichen.
+        var size = await JS.InvokeAsync<double[]>("kk.canvasSize", _canvas);
+        var fx = size[0] > 0 ? args.OffsetX / size[0] : 0.5;
+        var fy = size[1] > 0 ? args.OffsetY / size[1] : 0.5;
+
+        var height = _scale * Height / Width;
+        _centerX += (fx - 0.5) * _scale;
+        _centerY += (fy - 0.5) * height;
+        _scale = Math.Clamp(_scale * factor, 1e-13, 4.0);
+        await RenderAsync();
+    }
+
+    /// <summary>Berechnet das Fraktal in Streifen und zeichnet jeden Streifen sofort – so bleibt die Seite reaktionsfähig.</summary>
+    private async Task RenderAsync()
+    {
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        _rendering = true;
+        _progress = 0;
+        StateHasChanged();
+
+        var stopwatch = Stopwatch.StartNew();
+        long iterations = 0;
+        var pixelSize = _scale / Width;
+        var top = _centerY - pixelSize * Height / 2;
+        var left = _centerX - _scale / 2;
+        var buffer = new byte[Width * RowsPerChunk * 4];
+
+        for (var y0 = 0; y0 < Height; y0 += RowsPerChunk)
+        {
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            var rows = Math.Min(RowsPerChunk, Height - y0);
+            iterations += ComputeRows(buffer, y0, rows, left, top, pixelSize);
+            await JS.InvokeVoidAsync("kk.drawRows", _canvas, y0, Width, rows, buffer.AsMemory(0, Width * rows * 4).ToArray());
+
+            _progress = (int)((y0 + rows) * 100L / Height);
+            StateHasChanged();
+            await Task.Delay(1, token).ContinueWith(_ => { }, TaskScheduler.Default);
+        }
+
+        stopwatch.Stop();
+        _elapsed = stopwatch.Elapsed.TotalMilliseconds;
+        _iterations = iterations;
+        _rendering = false;
+        StateHasChanged();
+    }
+
+    private long ComputeRows(byte[] buffer, int y0, int rows, double left, double top, double pixelSize)
+    {
+        long total = 0;
+        var max = _maxIterations;
+        var index = 0;
+
+        for (var row = 0; row < rows; row++)
+        {
+            var ci = top + (y0 + row) * pixelSize;
+            for (var x = 0; x < Width; x++)
+            {
+                var cr = left + x * pixelSize;
+                double zr = 0, zi = 0, zr2 = 0, zi2 = 0;
+                var n = 0;
+
+                while (n < max && zr2 + zi2 <= 16)
+                {
+                    zi = 2 * zr * zi + ci;
+                    zr = zr2 - zi2 + cr;
+                    zr2 = zr * zr;
+                    zi2 = zi * zi;
+                    n++;
+                }
+
+                total += n;
+                int color;
+                if (n >= max)
+                {
+                    color = unchecked((int)0xFF0B0716);
+                }
+                else
+                {
+                    // Glatte Einfärbung (normalized iteration count), logarithmisch auf die Palette abgebildet
+                    var smooth = Math.Max(0, n + 1 - Math.Log(Math.Log(Math.Sqrt(zr2 + zi2))) / Math.Log(2));
+                    var t = Math.Log(smooth + 1) / Math.Log(max + 1);
+                    color = _palette[(int)Math.Clamp(t * (_palette.Length - 1), 0, _palette.Length - 1)];
+                }
+
+                buffer[index++] = (byte)(color >> 16);
+                buffer[index++] = (byte)(color >> 8);
+                buffer[index++] = (byte)color;
+                buffer[index++] = 255;
+            }
+        }
+
+        return total;
+    }
+
+    /// <summary>Farbverlauf in den Farben der Website: Nachtblau → Violett → Blau → Cyan → Weiß.</summary>
+    private static int[] BuildPalette(int iterations)
+    {
+        (double Position, int R, int G, int B)[] stops =
+        [
+            (0.00, 11, 7, 22),
+            (0.18, 76, 29, 149),
+            (0.40, 124, 92, 255),
+            (0.62, 79, 140, 255),
+            (0.82, 34, 211, 238),
+            (1.00, 240, 253, 255),
+        ];
+
+        var size = Math.Max(256, iterations);
+        var palette = new int[size];
+        for (var i = 0; i < size; i++)
+        {
+            var t = (double)i / (size - 1);
+            var s = 1;
+            while (s < stops.Length - 1 && stops[s].Position < t)
+            {
+                s++;
+            }
+
+            var (p0, r0, g0, b0) = stops[s - 1];
+            var (p1, r1, g1, b1) = stops[s];
+            var f = (t - p0) / (p1 - p0);
+            palette[i] = (int)(r0 + (r1 - r0) * f) << 16 | (int)(g0 + (g1 - g0) * f) << 8 | (int)(b0 + (b1 - b0) * f);
+        }
+
+        return palette;
+    }
+
+    public void Dispose() => _cts?.Cancel();
+}

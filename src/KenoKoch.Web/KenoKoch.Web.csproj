@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <Description>Host der Bewerbungsseite KenoKoch.com – setzt die Module zum modularen Monolithen zusammen.</Description>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <UserSecretsId>kenokoch-web-5b1f6f6e</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
+    <!-- Nur für "dotnet ef migrations" (Design-Time), wird nicht ausgeliefert -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KenoKoch.Web.Client\KenoKoch.Web.Client.csproj" />
+    <ProjectReference Include="..\KenoKoch.BuildingBlocks\KenoKoch.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\KenoKoch.UI\KenoKoch.UI.csproj" />
+    <ProjectReference Include="..\Modules\Profile\KenoKoch.Modules.Profile\KenoKoch.Modules.Profile.csproj" />
+    <ProjectReference Include="..\Modules\Guestbook\KenoKoch.Modules.Guestbook\KenoKoch.Modules.Guestbook.csproj" />
+    <ProjectReference Include="..\Modules\Analytics\KenoKoch.Modules.Analytics\KenoKoch.Modules.Analytics.csproj" />
+    <ProjectReference Include="..\Modules\Plc\KenoKoch.Modules.Plc\KenoKoch.Modules.Plc.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Program.cs wird zusätzlich eingebettet und im Hero der Startseite angezeigt -->
+    <EmbeddedResource Include="Program.cs" LogicalName="Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="KenoKoch.Tests" />
+  </ItemGroup>
+
+</Project>

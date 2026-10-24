@@ -1,0 +1,17 @@
+@inherits LayoutComponentBase
+
+<SiteHeader />
+
+<main id="inhalt" class="site-main" tabindex="-1">
+    @Body
+</main>
+
+<SiteFooter />
+<DevPlaceholderBanner />
+
+<div id="blazor-error-ui" data-nosnippet>
+    <Icon Name="alert" Size="16" />
+    <span>Da ist etwas schiefgelaufen.</span>
+    <a href="." class="reload">Seite neu laden</a>
+    <button type="button" class="dismiss" aria-label="Hinweis schließen">✕</button>
+</div>

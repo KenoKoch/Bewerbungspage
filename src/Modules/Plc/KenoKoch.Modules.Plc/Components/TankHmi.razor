@@ -1,0 +1,173 @@
+@using System.Globalization
+@* Prozessbild im Stil eines HMI (R&I-Fließbild): Tank T1, Pumpe P1, Ventil V1, LSHH und Messumformer LIT 101. *@
+<svg class="hmi-svg" viewBox="0 0 720 420" role="img" aria-label="@AriaLabel">
+    <defs>
+        <linearGradient id="@($"{_uid}-water")" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#38bdf8" />
+            <stop offset="1" stop-color="#075985" />
+        </linearGradient>
+        <linearGradient id="@($"{_uid}-steel")" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#1f2937" />
+            <stop offset=".45" stop-color="#334155" />
+            <stop offset="1" stop-color="#1e293b" />
+        </linearGradient>
+        <pattern id="@($"{_uid}-grid")" width="24" height="24" patternUnits="userSpaceOnUse">
+            <path d="M24 0H0V24" fill="none" stroke="rgba(148,163,184,.07)" stroke-width="1" />
+        </pattern>
+        <clipPath id="@($"{_uid}-clip")">
+            <rect x="336" y="96" width="188" height="250" rx="14" />
+        </clipPath>
+    </defs>
+
+    <rect x="0" y="0" width="720" height="420" fill="@($"url(#{_uid}-grid)")" />
+
+    @* Zulauf *@
+    <rect x="12" y="298" width="32" height="44" rx="5" class="hmi-source" fill="@($"url(#{_uid}-water)")" />
+    <text x="28" y="288" class="hmi-label" text-anchor="middle">Zulauf</text>
+
+    @* Rohrleitungen *@
+    @foreach (var pipe in Pipes)
+    {
+        <path class="hmi-pipe" d="@pipe" />
+        <path class="hmi-pipe-core" d="@pipe" />
+    }
+    <path class="hmi-flow @(Inflow ? "is-active" : null)" d="@Pipes[0]" />
+    <path class="hmi-flow @(Inflow ? "is-active" : null)" d="@Pipes[1]" />
+    <path class="hmi-flow @(Outflow ? "is-active" : null)" d="@Pipes[2]" />
+    <path class="hmi-flow @(Outflow ? "is-active" : null)" d="@Pipes[3]" />
+
+    @* Behälter T1 *@
+    <text x="430" y="80" class="hmi-tag" text-anchor="middle">T1 · 2.000 l</text>
+    <rect x="330" y="90" width="200" height="262" rx="18" class="hmi-tank-shell" fill="@($"url(#{_uid}-steel)")" />
+    <rect x="336" y="96" width="188" height="250" rx="14" class="hmi-tank-inner" />
+
+    <g clip-path="@($"url(#{_uid}-clip)")">
+        <rect x="377" y="92" width="6" height="@Inv(WaterOffset + 6)" class="hmi-stream @(Inflow ? "is-active" : null)" />
+        <g class="hmi-water" style="transform:translateY(@Inv(WaterOffset)px)">
+            <rect x="336" y="96" width="188" height="272" fill="@($"url(#{_uid}-water)")" />
+            <g class="hmi-wave">
+                <path d="@WavePath" />
+            </g>
+        </g>
+        <line x1="336" x2="524" y1="@Inv(LevelY(80))" y2="@Inv(LevelY(80))" class="hmi-setpoint" />
+        <line x1="336" x2="524" y1="@Inv(LevelY(20))" y2="@Inv(LevelY(20))" class="hmi-setpoint" />
+    </g>
+
+    <text x="430" y="226" class="hmi-value">@Fmt.Number(Snapshot.Level) %</text>
+    <text x="430" y="250" class="hmi-subvalue">@Fmt.Number(Snapshot.Liters) l</text>
+
+    @* Füllstandsskala mit Grenzwerten *@
+    <line x1="540" x2="540" y1="96" y2="346" class="hmi-scale" />
+    @for (var p = 0; p <= 100; p += 10)
+    {
+        var y = LevelY(p);
+        <g>
+            <line x1="540" x2="@(p % 50 == 0 ? 550 : 546)" y1="@Inv(y)" y2="@Inv(y)" class="hmi-scale" />
+            @if (p % 50 == 0)
+            {
+                <g><text x="554" y="@Inv(y + 4)" class="hmi-label">@p</text></g>
+            }
+        </g>
+    }
+    @foreach (var marker in Markers)
+    {
+        var y = LevelY(marker.Percent);
+        <g>
+            <path d="@($"M532,{Inv(y)} l-7,-4 v8 z")" class="hmi-marker hmi-marker--@marker.Kind" />
+            <line x1="572" x2="592" y1="@Inv(y)" y2="@Inv(y)" class="hmi-marker-line hmi-marker-line--@marker.Kind" />
+            <text x="596" y="@Inv(y + 4)" class="hmi-marker-text hmi-marker-text--@marker.Kind">@marker.Label</text>
+        </g>
+    }
+
+    @* Grenzwertgeber LSHH (Überfüllsicherung) *@
+    <g class="hmi-switch @(Snapshot.LevelHighHighSwitch ? "is-active" : null)">
+        <line x1="316" x2="330" y1="@Inv(LevelY(95))" y2="@Inv(LevelY(95))" />
+        <circle cx="309" cy="@Inv(LevelY(95))" r="7" />
+        <text x="297" y="@Inv(LevelY(95) + 4)" text-anchor="end">LSHH</text>
+    </g>
+
+    @* Messumformer LIT 101 *@
+    <g class="hmi-instrument">
+        <line x1="311" x2="330" y1="230" y2="230" class="hmi-signal" />
+        <circle cx="290" cy="230" r="21" />
+        <line x1="269" x2="311" y1="230" y2="230" />
+        <text x="290" y="225" text-anchor="middle">LIT</text>
+        <text x="290" y="243" text-anchor="middle">101</text>
+    </g>
+    <rect x="258" y="260" width="64" height="22" rx="4" class="hmi-readout" />
+    <text x="290" y="275" class="hmi-readout-text" text-anchor="middle">@Fmt.Number(Snapshot.Level, 1) %</text>
+
+    @* Pumpe P1 *@
+    <g class="hmi-pump hmi-pump--@PumpState">
+        <circle cx="180" cy="320" r="35" class="hmi-pump-halo" />
+        <circle cx="180" cy="320" r="26" class="hmi-pump-body" />
+        <path d="M166,299 L206,320 L166,341" class="hmi-pump-symbol" />
+        <text x="180" y="372" class="hmi-tag" text-anchor="middle">P1</text>
+        <text x="180" y="388" class="hmi-state" text-anchor="middle">@PumpText</text>
+        <text x="180" y="404" class="hmi-label" text-anchor="middle">@Fmt.Number(Snapshot.InflowLitersPerMinute) l/min</text>
+    </g>
+
+    @* Ventil V1 *@
+    <g class="hmi-valve hmi-valve--@ValveState">
+        <line x1="600" x2="600" y1="380" y2="357" class="hmi-valve-stem" />
+        <rect x="589" y="343" width="22" height="14" rx="3" class="hmi-valve-actuator" />
+        <path d="M585,369 L600,380 L585,391 Z M615,369 L600,380 L615,391 Z" class="hmi-valve-body" />
+        <text x="600" y="410" class="hmi-tag" text-anchor="middle">V1</text>
+    </g>
+    <text x="508" y="404" class="hmi-label" text-anchor="middle">@Fmt.Number(Snapshot.OutflowLitersPerMinute) l/min</text>
+
+    @* Verbraucher *@
+    <text x="690" y="348" class="hmi-label" text-anchor="middle">Abnahme</text>
+    <rect x="666" y="356" width="48" height="48" rx="8" class="hmi-consumer" />
+    <path d="M680,370 h16 v6 h-5 v6 h-6 v-6 h-5 z M688,386 c-2,3 -3,5 -3,6.5 a3,3 0 0 0 6,0 c0,-1.5 -1,-3.5 -3,-6.5 z" class="hmi-consumer-icon @(Outflow ? "is-active" : null)" />
+</svg>
+
+@code {
+    private static readonly string[] Pipes = ["M44,320 H154", "M206,320 H250 V58 H380 V92", "M430,352 V380 H585", "M615,380 H666"];
+
+    private static readonly (double Percent, string Label, string Kind)[] Markers =
+    [
+        (95, "HH 95", "danger"),
+        (80, "H 80", "info"),
+        (20, "L 20", "info"),
+        (8, "TL 8", "warn"),
+    ];
+
+    private static readonly string WavePath = BuildWave();
+
+    private readonly string _uid = "hmi" + Guid.NewGuid().ToString("N")[..6];
+
+    [Parameter, EditorRequired]
+    public PlcSnapshot Snapshot { get; set; } = default!;
+
+    private double WaterOffset => (1 - Math.Clamp(Snapshot.Level, 0, 100) / 100) * 250;
+
+    private bool Inflow => Snapshot.PumpSpeed > 0.05;
+
+    private bool Outflow => Snapshot.Valve && Snapshot.OutflowLitersPerMinute > 0.5;
+
+    private string PumpState => Snapshot.MotorProtectionTripped ? "fault" : Inflow ? "run" : "stop";
+
+    private string PumpText => Snapshot.MotorProtectionTripped ? "STÖRUNG" : Snapshot.Pump ? "EIN" : "AUS";
+
+    private string ValveState => Snapshot.Valve ? "open" : Snapshot.DryRunWarning ? "locked" : "closed";
+
+    private string AriaLabel =>
+        $"Prozessbild: Füllstand {Fmt.Number(Snapshot.Level)} Prozent, Pumpe {PumpText}, Ventil {(Snapshot.Valve ? "offen" : "geschlossen")}";
+
+    private static double LevelY(double percent) => 96 + (1 - percent / 100) * 250;
+
+    private static string Inv(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+
+    private static string BuildWave()
+    {
+        var path = new System.Text.StringBuilder("M276,96");
+        for (var x = 276; x < 584; x += 20)
+        {
+            path.Append(" q5,-3.5 10,0 t10,0");
+        }
+
+        path.Append(" V114 H276 Z");
+        return path.ToString();
+    }
+}

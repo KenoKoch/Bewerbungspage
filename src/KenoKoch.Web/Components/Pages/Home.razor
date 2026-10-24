@@ -1,0 +1,210 @@
+@page "/"
+@using KenoKoch.Modules.Plc.Runtime
+@inject ProfileStore Profiles
+@inject TimeProvider Time
+
+<SeoHead Title="Softwareentwickler C# / .NET"
+         Description="Keno Koch – Softwareentwickler für C#, .NET, Blazor und Azure. Bewerbungsseite mit Live-Demos, gebaut mit .NET 10, Blazor, EF Core, Azure SQL und Azure App Service."
+         Path="/" />
+<JsonLdPerson />
+
+<HeroSection />
+
+<section class="section section--proof" aria-labelledby="proof-title">
+    <div class="container">
+        <div class="proof" data-reveal>
+            <div class="proof__intro">
+                <span class="eyebrow eyebrow--live"><span class="live-dot is-live" aria-hidden="true"></span> Live</span>
+                <h2 id="proof-title" class="proof__title">Diese Seite ist selbst die Demo.</h2>
+                <p class="proof__text">Die Zahlen kommen in Echtzeit aus Blazor Server und Azure SQL – kein Screenshot, kein Mock.</p>
+            </div>
+            <LiveStatsStrip @rendermode="InteractiveServer" />
+        </div>
+    </div>
+</section>
+
+<section id="ueber-mich" class="section">
+    <div class="container">
+        <SectionHeading Number="01" Eyebrow="Über mich" Title="Software mit Struktur – vom Datenmodell bis zur Oberfläche." />
+
+        <div class="about">
+            <div class="about__text" data-reveal>
+                @foreach (var paragraph in Profile.About)
+                {
+                    <p>@paragraph</p>
+                }
+            </div>
+
+            <aside class="card about__card" data-reveal aria-label="Steckbrief">
+                <div class="about__identity">
+                    <span class="avatar" aria-hidden="true"><span>KK</span></span>
+                    <div>
+                        <p class="about__name">@Profile.Name</p>
+                        <p class="about__role">@Profile.Headline</p>
+                    </div>
+                </div>
+                <ul class="facts">
+                    @foreach (var fact in Profile.Facts)
+                    {
+                        <li>
+                            <span class="facts__icon"><Icon Name="@fact.Icon" Size="16" /></span>
+                            <span class="facts__label">@fact.Label</span>
+                            <span class="facts__value">@fact.Value</span>
+                        </li>
+                    }
+                </ul>
+                <div class="social">
+                    <SocialLinks Profile="Profile" />
+                </div>
+            </aside>
+        </div>
+
+        <div class="highlights">
+            @foreach (var (highlight, index) in Profile.Highlights.Select((h, i) => (h, i)))
+            {
+                <article class="card card--interactive highlight spotlight" data-reveal style="--reveal-delay:@(index * 90)ms">
+                    <span class="icon-tile @(highlight.Icon == "factory" ? "icon-tile--plc" : null)"><Icon Name="@highlight.Icon" Size="22" /></span>
+                    <h3>@highlight.Title</h3>
+                    <p>@highlight.Text</p>
+                </article>
+            }
+        </div>
+    </div>
+</section>
+
+<section id="werdegang" class="section section--alt">
+    <div class="container career">
+        <div class="career__intro">
+            <SectionHeading Number="02" Eyebrow="Werdegang" Title="Vom Schaltschrank in die Cloud." Lead="Erst Steuerungen für Maschinen und Anlagen, heute Business-Software für ein ganzes Unternehmen. Die Denkweise ist geblieben: zuverlässig, nachvollziehbar, wartbar." />
+            <div class="bridge" data-reveal aria-hidden="true">
+                <div class="bridge__node bridge__node--plc">
+                    <Icon Name="factory" Size="22" />
+                    <span>SPS · S7</span>
+                </div>
+                <div class="bridge__line"><span></span></div>
+                <div class="bridge__node bridge__node--net">
+                    <Icon Name="dotnet" Size="26" />
+                    <span>.NET · Azure</span>
+                </div>
+            </div>
+        </div>
+        <ExperienceTimeline />
+    </div>
+</section>
+
+<section id="skills" class="section">
+    <div class="container">
+        <SectionHeading Number="03" Eyebrow="Skills" Title="Werkzeuge, mit denen ich arbeite." Lead="Zu Hause im Microsoft-Stack – mit Wurzeln in der Automatisierungstechnik." />
+        <SkillGrid />
+    </div>
+</section>
+
+<section id="demos" class="section section--alt">
+    <div class="container">
+        <SectionHeading Number="04" Eyebrow="Live-Demos" Title="Nicht erzählen – zeigen." Lead="Acht Live-Demos laufen direkt auf dieser Website. Jede zeigt einen Teil des Stacks, mit dem ich täglich arbeite – inklusive Quelltext." />
+
+        <div class="bento">
+            <a class="bento__item bento__item--feature card card--interactive spotlight" href="/demos#sps" data-reveal>
+                <div class="bento__preview" aria-hidden="true">
+                    <TankHmi Snapshot="_plcShowcase" />
+                </div>
+                <div class="bento__body">
+                    <span class="bento__tag bento__tag--plc"><Icon Name="factory" Size="14" /> Mein SPS-Hintergrund, in .NET gebaut</span>
+                    <h3>SPS-Simulator mit HMI</h3>
+                    <p>Eine Soft-SPS pro Besucher: SCL-Funktionsbaustein in C#, Scan-Zyklus 100 ms, Verriegelungen, NOT-HALT und ein Meldesystem wie in WinCC.</p>
+                    <span class="link-arrow">Simulator starten <Icon Name="arrow-right" Size="15" /></span>
+                </div>
+            </a>
+
+            @foreach (var (demo, index) in Demos.Select((d, i) => (d, i)))
+            {
+                <a class="bento__item card card--interactive spotlight @(demo.Wide ? "bento__item--wide" : null)" href="@($"/demos#{demo.Anchor}")" data-reveal style="--reveal-delay:@(index * 60)ms">
+                    <span class="icon-tile"><Icon Name="@demo.Icon" Size="20" /></span>
+                    <h3>@demo.Title</h3>
+                    <p>@demo.Text</p>
+                    <span class="bento__tech">@demo.Tech</span>
+                </a>
+            }
+        </div>
+
+        <div class="center-actions" data-reveal>
+            <a class="btn btn--primary btn--lg" href="/demos">Alle Demos ansehen <Icon Name="arrow-right" Size="18" /></a>
+        </div>
+    </div>
+</section>
+
+<section id="architektur" class="section">
+    <div class="container">
+        <SectionHeading Number="05" Eyebrow="Architektur" Title="Ein modularer Monolith – wie im echten Job." Lead="Diese Website ist so aufgebaut wie die Plattform, an der ich arbeite: fachliche Module mit klaren Grenzen, eigene Datenbankschemas und Kommunikation über Events." />
+
+        <div class="arch-teaser">
+            <div class="arch-teaser__diagram card" data-reveal>
+                <ModuleDiagram />
+            </div>
+            <ul class="arch-teaser__points" data-reveal>
+                <li><Icon Name="puzzle" Size="18" /><div><strong>Module statt Microservices</strong><span>Ein Deployment, eine Datenbank – aber harte Grenzen zwischen den Fachlichkeiten.</span></div></li>
+                <li><Icon Name="database" Size="18" /><div><strong>Schema pro Modul</strong><span>Jedes Modul besitzt seine Tabellen und Migrationen in einem eigenen SQL-Schema.</span></div></li>
+                <li><Icon Name="zap" Size="18" /><div><strong>Integration Events</strong><span>Module kennen sich nicht. Sie kommunizieren über Events aus schlanken Contracts-Projekten.</span></div></li>
+                <li><Icon Name="shield" Size="18" /><div><strong>Abgesichert durch Tests</strong><span>Architekturtests im CI schlagen fehl, sobald ein Modul ein anderes direkt referenziert.</span></div></li>
+                <li class="arch-teaser__cta"><a class="link-arrow" href="/architektur">Architektur im Detail <Icon Name="arrow-right" Size="15" /></a></li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section id="kontakt" class="section section--contact">
+    <div class="container">
+        <div class="contact" data-reveal>
+            <div class="contact__glow" aria-hidden="true"></div>
+            <span class="eyebrow"><span class="eyebrow__number">06</span>Kontakt</span>
+            <h2 class="contact__title">Lassen Sie uns sprechen.</h2>
+            <p class="contact__text">
+                Ich freue mich über spannende Aufgaben rund um .NET, Blazor und Azure – gern auch dort,
+                wo Software und Industrie aufeinandertreffen. Schreiben Sie mir einfach.
+            </p>
+            <div class="contact__actions">
+                <a class="btn btn--primary btn--lg" href="@($"mailto:{Profile.Email}")"><Icon Name="mail" Size="18" /> @Profile.Email</a>
+                @if (SocialLinks.Usable(Profile.Links.LinkedIn) is { } linkedIn)
+                {
+                    <a class="btn btn--secondary btn--lg" href="@linkedIn" target="_blank" rel="noopener"><Icon Name="linkedin" Size="18" /> LinkedIn</a>
+                }
+                @if (SocialLinks.Usable(Profile.Links.GitHub) is { } gitHub)
+                {
+                    <a class="btn btn--secondary btn--lg" href="@gitHub" target="_blank" rel="noopener"><Icon Name="github" Size="18" /> GitHub</a>
+                }
+                @if (!string.IsNullOrWhiteSpace(Profile.CvUrl))
+                {
+                    <a class="btn btn--ghost btn--lg" href="@Profile.CvUrl" download><Icon Name="download" Size="18" /> Lebenslauf (PDF)</a>
+                }
+            </div>
+            <p class="contact__meta">
+                <span><Icon Name="map-pin" Size="15" /> @Profile.Location</span>
+                @if (!string.IsNullOrWhiteSpace(Profile.Availability))
+                {
+                    <span><span class="live-dot is-live" aria-hidden="true"></span> @Profile.Availability</span>
+                }
+            </p>
+        </div>
+    </div>
+</section>
+
+@code {
+    private sealed record DemoTeaser(string Anchor, string Icon, string Title, string Text, string Tech, bool Wide = false);
+
+    private static readonly DemoTeaser[] Demos =
+    [
+        new("render-modi", "layers", "Render-Modi im Vergleich", "Static SSR, Blazor Server und WebAssembly – dieselbe Idee, drei Ausführungsorte, nebeneinander.", ".NET 10 · [PersistentState]"),
+        new("echtzeit", "zap", "Echtzeit über SignalR", "Live-Besucherzähler und Emoji-Reaktionen, die sofort bei allen Besuchern ankommen.", "CircuitHandler · Events"),
+        new("daten", "database", "SQL Server & EF Core", "Gästebuch mit Validierung, Spam-Schutz und einem SQL-Inspector, der das erzeugte SQL zeigt.", "EF Core 10 · Azure SQL"),
+        new("module", "puzzle", "Modularer Monolith", "Module, Schemas, Events und Endpunkte – live aus der laufenden Anwendung ausgelesen.", "Reflection · Endpoint-Metadaten"),
+        new("wasm", "cpu", "C# im Browser", "Ein Fraktal, berechnet von .NET in WebAssembly. Der Server ist daran nicht beteiligt.", "WebAssembly · JS-Interop"),
+        new("api", "network", "Minimal APIs", "REST-Endpunkte mit OpenAPI-Beschreibung, Scalar-Referenz und Live-Aufruf aus WebAssembly.", "OpenAPI · Rate Limiting"),
+        new("laufzeit", "cloud", "Azure unter der Haube", "Region, Instanz, .NET-Version, Speicher und Datenbank-Latenz – live vom Server, auf dem diese Seite gerade läuft.", "App Service · Managed Identity", Wide: true),
+    ];
+
+    private ProfileData Profile => Profiles.Profile;
+
+    private PlcSnapshot _plcShowcase = default!;
+
+    protected override void OnInitialized() => _plcShowcase = PlcRuntime.Showcase(Time);
+}

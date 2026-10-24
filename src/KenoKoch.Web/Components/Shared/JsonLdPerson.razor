@@ -1,0 +1,34 @@
+@using System.Text.Json
+@inject ProfileStore Profiles
+@inject IOptions<SiteOptions> Site
+
+@* Strukturierte Daten (schema.org/Person) für Suchmaschinen. JSON wird von System.Text.Json HTML-sicher kodiert. *@
+<HeadContent>
+    @((MarkupString)$"<script type=\"application/ld+json\">{_json}</script>")
+</HeadContent>
+
+@code {
+    private string _json = "{}";
+
+    protected override void OnInitialized()
+    {
+        var profile = Profiles.Profile;
+        var sameAs = new[] { profile.Links.LinkedIn, profile.Links.GitHub, profile.Links.Xing }
+            .Select(SocialLinks.Usable)
+            .Where(url => url is not null)
+            .ToArray();
+
+        _json = JsonSerializer.Serialize(new Dictionary<string, object?>
+        {
+            ["@context"] = "https://schema.org",
+            ["@type"] = "Person",
+            ["name"] = profile.Name,
+            ["jobTitle"] = "Softwareentwickler",
+            ["description"] = profile.Tagline,
+            ["url"] = Site.Value.BaseUrl,
+            ["email"] = $"mailto:{profile.Email}",
+            ["knowsAbout"] = new[] { "C#", ".NET", "Blazor", "ASP.NET Core", "Entity Framework Core", "SQL Server", "Microsoft Azure", "Siemens S7", "TIA Portal", "WinCC" },
+            ["sameAs"] = sameAs,
+        });
+    }
+}

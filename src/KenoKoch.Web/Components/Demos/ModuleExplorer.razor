@@ -1,0 +1,82 @@
+@inject ModuleInfoProvider ModuleInfo
+
+@* Statisch gerendert: Die Informationen stammen per Reflection aus der laufenden Anwendung. *@
+<div class="mx">
+    <div class="mx__diagram card">
+        <ModuleDiagram />
+    </div>
+
+    <div class="mx__grid">
+        @foreach (var module in ModuleInfo.GetModules())
+        {
+            <article class="card mx__module" data-reveal>
+                <header class="mx__head">
+                    <div>
+                        <h3>@module.DisplayName</h3>
+                        <code class="mx__assembly">@module.Assembly · v@(module.Version)</code>
+                    </div>
+                    @if (module.DatabaseSchema is { } schema)
+                    {
+                        <span class="badge badge--db"><Icon Name="database" Size="12" /> [@schema]</span>
+                    }
+                </header>
+                <p class="mx__description">@module.Description</p>
+
+                <dl class="mx__facts">
+                    <div>
+                        <dt><Icon Name="network" Size="14" /> Endpunkte</dt>
+                        <dd>
+                            @if (module.Endpoints.Count == 0)
+                            {
+                                <span class="mx__none">keine</span>
+                            }
+                            @foreach (var endpoint in module.Endpoints)
+                            {
+                                <span class="mx__endpoint"><span class="mx__method">@endpoint.Method</span><code>@endpoint.Route</code></span>
+                            }
+                        </dd>
+                    </div>
+                    <div>
+                        <dt><Icon Name="zap" Size="14" /> Veröffentlicht</dt>
+                        <dd>@EventList(module.PublishedEvents)</dd>
+                    </div>
+                    <div>
+                        <dt><Icon Name="bell" Size="14" /> Abonniert</dt>
+                        <dd>@EventList(module.HandledEvents)</dd>
+                    </div>
+                    <div>
+                        <dt><Icon Name="git-branch" Size="14" /> Migrationen</dt>
+                        <dd>@(module.Migrations.Count == 0 ? "–" : string.Join(", ", module.Migrations))</dd>
+                    </div>
+                    <div>
+                        <dt><Icon Name="box" Size="14" /> Abhängigkeiten</dt>
+                        <dd class="mx__deps">
+                            @foreach (var dependency in module.Dependencies)
+                            {
+                                <code class="@(dependency.EndsWith(".Contracts", StringComparison.Ordinal) ? "is-contract" : null)">@dependency.Replace("KenoKoch.", string.Empty, StringComparison.Ordinal)</code>
+                            }
+                        </dd>
+                    </div>
+                    <div>
+                        <dt><Icon Name="layers" Size="14" /> UI-Komponenten</dt>
+                        <dd>@module.ComponentCount Razor-Komponenten</dd>
+                    </div>
+                </dl>
+            </article>
+        }
+    </div>
+
+    <div class="mx__rules card" data-reveal>
+        <h3><Icon Name="shield" Size="18" /> Architekturregeln – per Test im CI erzwungen</h3>
+        <ul>
+            <li><Icon Name="check" Size="15" /> Module referenzieren keine anderen Module, nur deren <code>*.Contracts</code>.</li>
+            <li><Icon Name="check" Size="15" /> Contracts enthalten nur Events und hängen ausschließlich von <code>BuildingBlocks</code> ab.</li>
+            <li><Icon Name="check" Size="15" /> Jedes Modul mit Daten besitzt ein eigenes Schema und eine eigene Migrationshistorie.</li>
+            <li><Icon Name="check" Size="15" /> <code>BuildingBlocks</code> und <code>UI</code> kennen kein einziges Modul.</li>
+        </ul>
+    </div>
+</div>
+
+@code {
+    private static string EventList(IReadOnlyList<string> events) => events.Count == 0 ? "–" : string.Join(", ", events);
+}

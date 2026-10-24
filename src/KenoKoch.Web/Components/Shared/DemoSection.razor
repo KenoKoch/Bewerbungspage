@@ -1,0 +1,68 @@
+@inject ProfileStore Profiles
+
+<section id="@Id" class="demo-section" aria-labelledby="@($"{Id}-title")">
+    <div class="container">
+        <header class="demo-section__head" data-reveal>
+            <div class="demo-section__meta">
+                <span class="demo-section__number">@Number</span>
+                <span class="icon-tile"><Icon Name="@Icon" Size="20" /></span>
+                <span class="demo-section__kicker">@Kicker</span>
+            </div>
+            <div class="demo-section__intro">
+                <h2 id="@($"{Id}-title")" class="demo-section__title">@Title</h2>
+                <p class="demo-section__lead">@Lead</p>
+            </div>
+            @if (Points.Count > 0)
+            {
+                <ul class="demo-section__points">
+                    @foreach (var point in Points)
+                    {
+                        <li><Icon Name="check" Size="15" /><span>@point</span></li>
+                    }
+                </ul>
+            }
+            @if (SourceUrl is { } url)
+            {
+                <a class="link-arrow" href="@url" target="_blank" rel="noopener">Quelltext auf GitHub <Icon Name="arrow-up-right" Size="15" /></a>
+            }
+        </header>
+        <div class="demo-section__body">
+            @ChildContent
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Id { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Number { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Icon { get; set; } = "sparkles";
+
+    [Parameter, EditorRequired]
+    public string Kicker { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Lead { get; set; } = string.Empty;
+
+    [Parameter]
+    public IReadOnlyList<string> Points { get; set; } = [];
+
+    /// <summary>Pfad im Repository, z. B. "src/Modules/Plc".</summary>
+    [Parameter]
+    public string? SourcePath { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string? SourceUrl =>
+        SourcePath is not null && SocialLinks.Usable(Profiles.Profile.Links.Repository) is { } repository
+            ? $"{repository.TrimEnd('/')}/tree/main/{SourcePath}"
+            : null;
+}

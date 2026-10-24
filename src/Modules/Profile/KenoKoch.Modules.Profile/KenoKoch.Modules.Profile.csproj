@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <Description>Modul "Profil": Lebenslauf, Skills und Kontaktdaten als Daten, API und UI-Komponenten.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\KenoKoch.BuildingBlocks\KenoKoch.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\..\KenoKoch.UI\KenoKoch.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Alle Inhalte des Lebenslaufs liegen in dieser Datei -->
+    <EmbeddedResource Include="Data\profile.json" LogicalName="profile.json" />
+  </ItemGroup>
+
+</Project>

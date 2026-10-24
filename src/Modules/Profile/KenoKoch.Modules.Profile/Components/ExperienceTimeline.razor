@@ -1,0 +1,81 @@
+@inject ProfileStore Store
+
+<ol class="timeline">
+    @foreach (var job in Store.Profile.Experience)
+    {
+        <li class="timeline__item timeline__item--@job.Kind @(job.Current ? "is-current" : null)" data-reveal>
+            <div class="timeline__marker" aria-hidden="true">
+                <Icon Name="@(job.Kind == "automation" ? "factory" : "code")" Size="20" />
+            </div>
+            <article class="card card--interactive timeline__card spotlight">
+                <header class="timeline__header">
+                    <div class="timeline__meta">
+                        <span class="timeline__period">@job.Period</span>
+                        @if (job.Current)
+                        {
+                            <span class="badge badge--live"><span class="dot"></span>aktuell</span>
+                        }
+                        @if (job.Kind == "automation")
+                        {
+                            <span class="badge badge--plc">Automatisierung</span>
+                        }
+                    </div>
+                    <h3 class="timeline__role">@job.Role</h3>
+                    <p class="timeline__company">
+                        <Icon Name="briefcase" Size="15" />
+                        <span>@job.Company</span>
+                        @if (!string.IsNullOrWhiteSpace(job.Location))
+                        {
+                            <span class="timeline__sep" aria-hidden="true">·</span>
+                            <Icon Name="map-pin" Size="15" />
+                            <span>@job.Location</span>
+                        }
+                    </p>
+                </header>
+
+                <p class="timeline__summary">@job.Summary</p>
+
+                @if (job.Achievements.Count > 0)
+                {
+                    <ul class="timeline__achievements">
+                        @foreach (var achievement in job.Achievements)
+                        {
+                            <li><Icon Name="check" Size="16" Class="timeline__check" /><span>@achievement</span></li>
+                        }
+                    </ul>
+                }
+
+                @if (job.Tech.Count > 0)
+                {
+                    <ul class="tag-list" aria-label="Technologien">
+                        @foreach (var tech in job.Tech)
+                        {
+                            <li class="tag">@tech</li>
+                        }
+                    </ul>
+                }
+            </article>
+        </li>
+    }
+
+    @foreach (var education in Store.Profile.Education)
+    {
+        <li class="timeline__item timeline__item--education" data-reveal>
+            <div class="timeline__marker" aria-hidden="true">
+                <Icon Name="graduation" Size="20" />
+            </div>
+            <article class="card timeline__card timeline__card--compact">
+                <div class="timeline__meta">
+                    <span class="timeline__period">@education.Period</span>
+                    <span class="badge">Ausbildung</span>
+                </div>
+                <h3 class="timeline__role">@education.Title</h3>
+                <p class="timeline__company"><Icon Name="graduation" Size="15" /> <span>@education.Institution</span></p>
+                @if (!string.IsNullOrWhiteSpace(education.Details))
+                {
+                    <p class="timeline__summary">@education.Details</p>
+                }
+            </article>
+        </li>
+    }
+</ol>

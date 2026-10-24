@@ -1,0 +1,442 @@
+@implements IAsyncDisposable
+@inject PlcRuntimeFactory Factory
+@inject PlcSessionRegistry Registry
+@inject PlcSourceCode Source
+@inject TimeProvider Time
+
+<div class="plc">
+    <div class="plc__layout">
+        <aside class="plc__side">
+            <section class="cpu" aria-label="CPU der Soft-SPS">
+                <div class="cpu__head">
+                    <span class="cpu__brand">SOFT-SPS</span>
+                    <span class="cpu__model">OB1 · 100 ms</span>
+                </div>
+                <div class="cpu__body">
+                    <ul class="cpu__leds">
+                        <li><span class="led @(IsRun ? "led--green" : null)"></span>RUN</li>
+                        <li><span class="led @(!IsRun ? "led--amber" : null)"></span>STOP</li>
+                        <li><span class="led @(S.FaultLamp ? "led--red led--blink" : null)"></span>ERROR</li>
+                        <li><span class="led @(S.DryRunWarning ? "led--amber" : null)"></span>MAINT</li>
+                    </ul>
+                    <div class="cpu__display">
+                        <span class="cpu__display-mode">@(IsRun ? "RUN" : "STOP")</span>
+                        <span>Zyklus @Fmt.Number(S.CycleCount)</span>
+                        <span>OB1 @Fmt.Microseconds(S.LastCycleMicroseconds)</span>
+                        <span>max @Fmt.Microseconds(S.MaxCycleMicroseconds)</span>
+                    </div>
+                </div>
+                <div class="cpu__switch" role="group" aria-label="Betriebsartenschalter der CPU">
+                    <button type="button" class="@(IsRun ? "is-active" : null)" aria-pressed="@AriaBool(IsRun)" disabled="@(!Ready)" @onclick="() => Send(PlcCommand.CpuRun(true))">RUN</button>
+                    <button type="button" class="@(!IsRun ? "is-active" : null)" aria-pressed="@AriaBool(!IsRun)" disabled="@(!Ready)" @onclick="() => Send(PlcCommand.CpuRun(false))">STOP</button>
+                </div>
+                @if (S.IdleStopped)
+                {
+                    <p class="cpu__hint">Nach 10 Minuten ohne Bedienung automatisch in STOP geschaltet.</p>
+                }
+            </section>
+
+            <section class="side-card" aria-label="Feldgeräte">
+                <h4 class="side-card__title"><Icon Name="wrench" Size="15" /> Feldgeräte</h4>
+
+                <div class="estop">
+                    <button type="button"
+                            class="estop__button @(S.EmergencyStopPressed ? "is-pressed" : null)"
+                            aria-pressed="@AriaBool(S.EmergencyStopPressed)"
+                            aria-label="NOT-HALT"
+                            disabled="@(!Ready)"
+                            @onclick="() => Send(PlcCommand.ToggleEmergencyStop())">
+                        <span class="estop__cap"></span>
+                    </button>
+                    <div class="estop__text">
+                        <strong>NOT-HALT</strong>
+                        <span>@(S.EmergencyStopPressed ? "Betätigt – zum Entriegeln erneut klicken" : "Klicken zum Auslösen")</span>
+                    </div>
+                </div>
+
+                <div class="side-row">
+                    <div class="side-row__text">
+                        <strong>Motorschutz P1</strong>
+                        <span>@(S.MotorProtectionTripped ? "Ausgelöst – Störung simuliert" : "In Ordnung")</span>
+                    </div>
+                    <button type="button"
+                            class="toggle @(S.MotorProtectionTripped ? "toggle--danger is-on" : null)"
+                            role="switch"
+                            aria-checked="@AriaBool(S.MotorProtectionTripped)"
+                            aria-label="Motorschutz auslösen"
+                            disabled="@(!Ready)"
+                            @onclick="() => Send(PlcCommand.MotorProtection(!S.MotorProtectionTripped))">
+                        <span class="toggle__thumb"></span>
+                    </button>
+                </div>
+
+                <div class="side-row side-row--stack">
+                    <label class="side-row__text" for="plc-demand">
+                        <strong>Abnahme Verbraucher</strong>
+                        <span>@Fmt.Number(S.ConsumerDemand * 100) % · @Fmt.Number(S.OutflowLitersPerMinute) l/min</span>
+                    </label>
+                    <input id="plc-demand" class="range" type="range" min="0" max="100" step="5"
+                           value="@((int)Math.Round(S.ConsumerDemand * 100))"
+                           disabled="@(!Ready)"
+                           @onchange="OnDemandChanged" />
+                </div>
+            </section>
+
+            <section class="side-card mission" aria-label="Aufgaben zum Ausprobieren">
+                <h4 class="side-card__title"><Icon Name="target" Size="15" /> Probieren Sie es aus</h4>
+                <ol>
+                    @foreach (var step in _steps)
+                    {
+                        <li class="@(step.Done ? "is-done" : null)">
+                            <span class="mission__check" aria-hidden="true">
+                                @if (step.Done)
+                                {
+                                    <Icon Name="check" Size="12" StrokeWidth="3" />
+                                }
+                            </span>
+                            <span>@step.Text</span>
+                        </li>
+                    }
+                </ol>
+            </section>
+        </aside>
+
+        <div class="plc__main">
+            <div class="hmi">
+                <div class="hmi__display">
+                <header class="hmi__bar">
+                    <span class="hmi__title">TANKANLAGE T1</span>
+                    <span class="hmi__chip @(S.AutoMode ? "hmi__chip--auto" : "hmi__chip--hand")">@(S.AutoMode ? "AUTO" : "HAND")</span>
+                    <span class="hmi__lamp @(S.RunLamp ? "is-on hmi__lamp--green" : null)"><span></span>Anlage EIN</span>
+                    <span class="hmi__lamp @(S.FaultLamp ? "is-on hmi__lamp--red" : null)"><span></span>Störung</span>
+                    <span class="hmi__horn @(S.Horn ? "is-on" : null)" title="Hupe (%Q0.2)"><Icon Name="@(S.Horn ? "bell" : "bell-off")" Size="14" /></span>
+                    <span class="hmi__spacer"></span>
+                    <span class="hmi__meta">SPS #@S.SessionTag</span>
+                    <span class="hmi__clock">@Fmt.Time(GermanTime.ToGerman(S.Timestamp))</span>
+                </header>
+
+                <div class="hmi__screen">
+                    <TankHmi Snapshot="S" />
+
+                    @if (!Ready)
+                    {
+                        <div class="hmi__overlay">
+                            @if (_limitReached)
+                            {
+                                <Icon Name="users" Size="22" />
+                                <p>Gerade laufen sehr viele SPS-Simulationen (@Fmt.Number(Registry.ActiveSessions) von @Fmt.Number(Registry.MaxSessions)). Bitte versuchen Sie es in ein paar Minuten erneut.</p>
+                            }
+                            else
+                            {
+                                <span class="spinner"></span>
+                                <p>Verbindung zur Soft-SPS wird aufgebaut …</p>
+                            }
+                        </div>
+                    }
+                    else if (!IsRun)
+                    {
+                        <div class="hmi__hint"><Icon Name="info" Size="14" /> CPU steht auf STOP – schalten Sie sie links auf RUN.</div>
+                    }
+                    else if (!S.Running && S.Alarms.Count == 0)
+                    {
+                        <div class="hmi__hint"><Icon Name="play" Size="12" /> CPU läuft – jetzt die Anlage mit START einschalten.</div>
+                    }
+                </div>
+
+                <div class="hmi__controls">
+                    <div class="hmi__group">
+                        <span class="hmi__group-label">Betriebsart</span>
+                        <div class="hmi-seg" role="group" aria-label="Betriebsart">
+                            <button type="button" class="@(S.AutoMode ? "is-active" : null)" aria-pressed="@AriaBool(S.AutoMode)" disabled="@(!Ready)" @onclick="() => Send(PlcCommand.Auto(true))">AUTO</button>
+                            <button type="button" class="@(!S.AutoMode ? "is-active" : null)" aria-pressed="@AriaBool(!S.AutoMode)" disabled="@(!Ready)" @onclick="() => Send(PlcCommand.Auto(false))">HAND</button>
+                        </div>
+                    </div>
+
+                    <div class="hmi__group">
+                        <span class="hmi__group-label">Anlage</span>
+                        <div class="hmi__buttons">
+                            <button type="button" class="hmi-btn hmi-btn--start" disabled="@(!Ready)" @onclick="() => Send(PlcCommand.PressStart())"><Icon Name="play" Size="13" /> START</button>
+                            <button type="button" class="hmi-btn hmi-btn--stop" disabled="@(!Ready)" @onclick="() => Send(PlcCommand.PressStop())"><Icon Name="stop" Size="13" /> STOP</button>
+                        </div>
+                    </div>
+
+                    <div class="hmi__group">
+                        <span class="hmi__group-label">Handbetrieb</span>
+                        <div class="hmi__buttons">
+                            <button type="button" class="hmi-btn @(S.ManualPump ? "is-on" : null)" aria-pressed="@AriaBool(S.ManualPump)" disabled="@(!Ready || S.AutoMode)" @onclick="() => Send(PlcCommand.ManualPump(!S.ManualPump))">P1 @(S.ManualPump ? "EIN" : "AUS")</button>
+                            <button type="button" class="hmi-btn @(S.ManualValve ? "is-on" : null)" aria-pressed="@AriaBool(S.ManualValve)" disabled="@(!Ready || S.AutoMode)" @onclick="() => Send(PlcCommand.ManualValve(!S.ManualValve))">V1 @(S.ManualValve ? "AUF" : "ZU")</button>
+                        </div>
+                    </div>
+
+                    <div class="hmi__group">
+                        <span class="hmi__group-label">Meldungen</span>
+                        <button type="button" class="hmi-btn hmi-btn--ack @(HasUnacknowledged ? "is-attention" : null)" disabled="@(!Ready)" @onclick="() => Send(PlcCommand.PressAcknowledge())"><Icon Name="check" Size="13" /> Quittieren</button>
+                    </div>
+                </div>
+
+                <div class="hmi__alarms" role="log" aria-label="Anstehende Meldungen">
+                    @if (S.Alarms.Count == 0)
+                    {
+                        <div class="hmi-alarm hmi-alarm--ok"><Icon Name="check-circle" Size="14" /> Keine anstehenden Meldungen</div>
+                    }
+                    else
+                    {
+                        @foreach (var alarm in S.Alarms.Take(3))
+                        {
+                            <div class="hmi-alarm hmi-alarm--@alarm.Class.ToString().ToLowerInvariant() @(alarm.Acknowledged ? null : "is-unacknowledged") @(alarm.Active ? null : "is-gone")">
+                                <span class="hmi-alarm__nr">@alarm.Number</span>
+                                <span class="hmi-alarm__time">@Fmt.Time(GermanTime.ToGerman(alarm.CameAt))</span>
+                                <span class="hmi-alarm__state">@alarm.State</span>
+                                <span class="hmi-alarm__text">@alarm.Text</span>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="hmi__trend">
+                    <PlcTrend Samples="S.Trend" Now="S.SimulationSeconds" />
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="plc-tabs">
+        <div class="plc-tabs__list" role="tablist" aria-label="Details zur SPS">
+            @foreach (var tab in Tabs)
+            {
+                var current = tab;
+                <button type="button" role="tab" class="plc-tabs__tab @(_tab == current.Id ? "is-active" : null)" aria-selected="@AriaBool(_tab == current.Id)" @onclick="() => _tab = current.Id">
+                    <Icon Name="@current.Icon" Size="14" /> @current.Label
+                </button>
+            }
+        </div>
+
+        <div class="plc-tabs__panel" role="tabpanel">
+            @switch (_tab)
+            {
+                case "io":
+                    <div class="io">
+                        <IoTable Title="Eingänge (PAE)" Points="S.Inputs" />
+                        <IoTable Title="Ausgänge (PAA) und Merker" Points="S.Outputs" />
+                    </div>
+                    <p class="plc-note"><Icon Name="info" Size="14" /> Der Füllstand kommt wie bei einer echten Analogbaugruppe als Rohwert 0 … 27648 an und wird im FB mit NORM_X/SCALE_X auf Prozent skaliert.</p>
+                    break;
+                case "scl":
+                    <CodeBlock Code="@Source.Scl" Language="CodeLanguage.Scl" Title="FB_TankControl.scl" MaxHeight="560px" />
+                    <p class="plc-note"><Icon Name="info" Size="14" /> So sähe der Baustein im TIA Portal aus. Die C#-Fassung im nächsten Reiter ist Zeile für Zeile daraus übertragen.</p>
+                    break;
+                case "csharp":
+                    <CodeBlock Code="@Source.CSharp" Language="CodeLanguage.CSharp" Title="TankControlFb.cs" MaxHeight="560px" />
+                    <p class="plc-note"><Icon Name="info" Size="14" /> Das ist der echte Quelltext, der gerade auf dem Server läuft – er wird zur Build-Zeit als Ressource eingebettet.</p>
+                    break;
+                case "archive":
+                    @if (S.History.Count == 0)
+                    {
+                        <p class="plc-empty">Noch keine abgeschlossenen Meldungen. Lösen Sie den NOT-HALT aus und quittieren Sie danach.</p>
+                    }
+                    else
+                    {
+                        <table class="data-table">
+                            <thead><tr><th scope="col">Nr.</th><th scope="col">Klasse</th><th scope="col">Gekommen</th><th scope="col">Zustand</th><th scope="col">Meldetext</th></tr></thead>
+                            <tbody>
+                                @foreach (var alarm in S.History)
+                                {
+                                    <tr>
+                                        <td><code>@alarm.Number</code></td>
+                                        <td>@ClassLabel(alarm.Class)</td>
+                                        <td>@Fmt.Time(GermanTime.ToGerman(alarm.CameAt))</td>
+                                        <td><code>@alarm.State</code></td>
+                                        <td>@alarm.Text</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    break;
+                default:
+                    <div class="how">
+                        @foreach (var item in HowItWorks)
+                        {
+                            <article class="how__item">
+                                <span class="icon-tile icon-tile--plc"><Icon Name="@item.Icon" Size="18" /></span>
+                                <div>
+                                    <h5>@item.Title</h5>
+                                    <p>@item.Text</p>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                    break;
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private sealed class MissionStep(string text)
+    {
+        public string Text { get; } = text;
+
+        public bool Done { get; set; }
+    }
+
+    private static readonly (string Id, string Label, string Icon)[] Tabs =
+    [
+        ("io", "Prozessabbild", "cpu"),
+        ("scl", "SCL (TIA Portal)", "file-code"),
+        ("csharp", "C# (läuft hier)", "code"),
+        ("archive", "Meldearchiv", "bell"),
+        ("how", "So funktioniert's", "info"),
+    ];
+
+    private static readonly (string Icon, string Title, string Text)[] HowItWorks =
+    [
+        ("reset", "Zyklischer Scan wie in der S7", "Ein PeriodicTimer startet alle 100 ms einen Zyklus: Bedienbefehle übernehmen, Prozessabbild der Eingänge lesen, Funktionsbaustein ausführen, Ausgänge schreiben."),
+        ("file-code", "SCL → C# Zeile für Zeile", "Flankenauswertung (R_TRIG), Selbsthaltung, rücksetzdominante EIN/AUS-Logik, Zweipunktregler mit Hysterese und Verriegelungen – genau wie im SCL-Original."),
+        ("users", "Eine SPS pro Besucher", "Jeder Besucher bekommt eine eigene Instanz in seinem Blazor-Circuit. Beim Verlassen der Seite wird sie über IAsyncDisposable sauber beendet; ein Limit schützt den Server."),
+        ("layers", "Unveränderliche Snapshots", "Nach jedem Zyklus entsteht ein immutable Record. Die Oberfläche rendert höchstens fünfmal pro Sekunde und nur bei Änderungen – das hält den SignalR-Verkehr klein."),
+        ("bell", "Meldesystem nach WinCC-Vorbild", "Störungen kommen (K), werden quittiert (Q) und gehen (G). Die Hupe läuft bis zur Quittierung, Warnungen verschwinden von selbst."),
+        ("zap", "Lose gekoppelt über Events", "RUN und Störungen werden als Integration Events veröffentlicht. Das Statistik-Modul zählt sie, ohne das SPS-Modul überhaupt zu kennen."),
+    ];
+
+    private readonly MissionStep[] _steps =
+    [
+        new("CPU auf RUN schalten"),
+        new("Anlage mit START einschalten"),
+        new("NOT-HALT auslösen – alles stoppt sicher"),
+        new("Entriegeln, quittieren und neu starten"),
+        new("Im Handbetrieb überfüllen – die Überfüllsicherung greift"),
+    ];
+
+    private PlcRuntime? _runtime;
+    private PlcSnapshot? _snapshot;
+    private bool _limitReached;
+    private bool _sawEmergencyStop;
+    private string _tab = "io";
+    private long _lastRenderTicks;
+    private string? _lastSignature;
+    private int _renderQueued;
+    private bool _disposed;
+
+    private PlcSnapshot S => _snapshot ??= PlcRuntime.Preview(Time);
+
+    private bool Ready => _runtime is not null;
+
+    private bool IsRun => S.Mode == CpuMode.Run;
+
+    private bool HasUnacknowledged => S.Alarms.Any(a => !a.Acknowledged);
+
+    protected override void OnInitialized()
+    {
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        _runtime = Factory.TryCreate();
+        if (_runtime is null)
+        {
+            _limitReached = true;
+            return;
+        }
+
+        _snapshot = _runtime.Snapshot;
+        _runtime.Updated += OnRuntimeUpdated;
+        _runtime.Start();
+    }
+
+    private void Send(PlcCommand command) => _runtime?.Send(command);
+
+    private void OnDemandChanged(ChangeEventArgs args)
+    {
+        if (double.TryParse(args.Value?.ToString(), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var percent))
+        {
+            Send(PlcCommand.Demand(percent / 100));
+        }
+    }
+
+    /// <summary>
+    /// Wird nach jedem SPS-Zyklus (100 ms) auf einem Thread-Pool-Thread aufgerufen.
+    /// Gerendert wird nur bei sichtbaren Änderungen und höchstens alle ~200 ms.
+    /// </summary>
+    private void OnRuntimeUpdated()
+    {
+        var runtime = _runtime;
+        if (runtime is null || _disposed)
+        {
+            return;
+        }
+
+        var snapshot = runtime.Snapshot;
+        var signature = Signature(snapshot);
+        var now = Environment.TickCount64;
+        var discreteChange = signature != _lastSignature;
+
+        if (!discreteChange && (snapshot.Mode == CpuMode.Stop || now - _lastRenderTicks < 190))
+        {
+            return;
+        }
+
+        if (Interlocked.Exchange(ref _renderQueued, 1) == 1)
+        {
+            return;
+        }
+
+        _lastSignature = signature;
+        _lastRenderTicks = now;
+
+        _ = InvokeAsync(() =>
+        {
+            Volatile.Write(ref _renderQueued, 0);
+            if (_disposed)
+            {
+                return;
+            }
+
+            _snapshot = runtime.Snapshot;
+            UpdateMission(_snapshot);
+            StateHasChanged();
+        });
+    }
+
+    private static string Signature(PlcSnapshot s) => string.Join('|',
+        s.Mode, s.Running, s.AutoMode, s.ManualPump, s.ManualValve, s.EmergencyStopPressed, s.MotorProtectionTripped,
+        s.Pump, s.Valve, s.Horn, s.FaultLamp, s.DryRunWarning, Math.Round(s.ConsumerDemand, 2), Math.Round(s.Level),
+        s.Timestamp.ToUnixTimeSeconds(), string.Concat(s.Alarms.Select(a => $"{a.Number}{a.State}")), s.History.Count, s.IdleStopped);
+
+    private void UpdateMission(PlcSnapshot s)
+    {
+        var run = s.Mode == CpuMode.Run;
+        _steps[0].Done |= run;
+        _steps[1].Done |= s.Running;
+
+        if (run && s.EmergencyStopPressed)
+        {
+            _steps[2].Done = true;
+            _sawEmergencyStop = true;
+        }
+
+        _steps[3].Done |= _sawEmergencyStop && !s.EmergencyStopPressed && s.Running;
+        _steps[4].Done |= s.Alarms.Any(a => a.Number == AlarmManager.LevelHighHigh.Number);
+    }
+
+    private static string AriaBool(bool value) => value ? "true" : "false";
+
+    private static string ClassLabel(AlarmClass alarmClass) => alarmClass switch
+    {
+        AlarmClass.Fault => "Störung",
+        AlarmClass.Warning => "Warnung",
+        _ => "System",
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        if (_runtime is not null)
+        {
+            _runtime.Updated -= OnRuntimeUpdated;
+            await _runtime.DisposeAsync();
+        }
+    }
+}

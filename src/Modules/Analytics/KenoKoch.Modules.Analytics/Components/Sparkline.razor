@@ -1,0 +1,46 @@
+@* Sparkline nach Stat-Tile-Vertrag: Verlauf im zurückhaltenden Ton, aktueller Wert im Akzent. *@
+<svg class="sparkline" viewBox="0 0 @Width @Height" width="@Width" height="@Height" role="img" aria-label="@AriaLabel">
+    <polyline class="sparkline__line" points="@_points" />
+    <circle class="sparkline__dot" cx="@_lastX" cy="@_lastY" r="4" />
+</svg>
+
+@code {
+    private const int Width = 96;
+    private const int Height = 34;
+    private const double Padding = 5;
+
+    private string _points = string.Empty;
+    private string _lastX = "0";
+    private string _lastY = "0";
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<double> Values { get; set; } = [];
+
+    [Parameter]
+    public string Label { get; set; } = "Verlauf";
+
+    private string AriaLabel => Values.Count == 0
+        ? Label
+        : $"{Label}: von {Fmt.Number(Values[0])} auf {Fmt.Number(Values[^1])}, Maximum {Fmt.Number(Values.Max())}";
+
+    protected override void OnParametersSet()
+    {
+        if (Values.Count == 0)
+        {
+            _points = string.Empty;
+            return;
+        }
+
+        var max = Math.Max(1, Values.Max());
+        var step = Values.Count > 1 ? (Width - 2 * Padding) / (Values.Count - 1) : 0;
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+
+        var coordinates = Values
+            .Select((value, index) => (X: Padding + index * step, Y: Height - Padding - value / max * (Height - 2 * Padding)))
+            .ToArray();
+
+        _points = string.Join(' ', coordinates.Select(c => $"{c.X.ToString("0.#", inv)},{c.Y.ToString("0.#", inv)}"));
+        _lastX = coordinates[^1].X.ToString("0.#", inv);
+        _lastY = coordinates[^1].Y.ToString("0.#", inv);
+    }
+}

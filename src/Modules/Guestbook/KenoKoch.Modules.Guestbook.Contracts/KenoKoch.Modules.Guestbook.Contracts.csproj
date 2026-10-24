@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Öffentliche Integration Events des Moduls – die einzige Abhängigkeit, die andere Module eingehen dürfen.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\KenoKoch.BuildingBlocks\KenoKoch.BuildingBlocks.csproj" />
+  </ItemGroup>
+
+</Project>

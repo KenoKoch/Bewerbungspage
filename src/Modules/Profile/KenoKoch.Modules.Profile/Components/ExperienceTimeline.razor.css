@@ -1,0 +1,149 @@
+.timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    display: grid;
+    gap: 1.5rem;
+}
+
+.timeline::before {
+    content: "";
+    position: absolute;
+    left: 23px;
+    top: 24px;
+    bottom: 24px;
+    width: 2px;
+    border-radius: 2px;
+    background: linear-gradient(to bottom, var(--accent-1) 0%, var(--accent-2) 45%, var(--plc) 75%, var(--border-strong) 100%);
+    opacity: .55;
+}
+
+.timeline__item {
+    position: relative;
+    padding-left: 76px;
+}
+
+.timeline__marker {
+    position: absolute;
+    left: 0;
+    top: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    color: var(--accent-1);
+    background: var(--bg-elev);
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 0 0 6px var(--bg);
+    z-index: 1;
+}
+
+.timeline__item--automation .timeline__marker {
+    color: var(--plc);
+}
+
+.timeline__item--education .timeline__marker {
+    color: var(--text-muted);
+}
+
+.is-current .timeline__marker {
+    color: #fff;
+    border-color: transparent;
+    background: var(--accent-gradient);
+    box-shadow: 0 0 0 6px var(--bg), 0 10px 30px -6px rgba(124, 92, 255, .6);
+}
+
+.timeline__card {
+    padding: 1.6rem 1.75rem;
+}
+
+.timeline__card--compact {
+    padding: 1.25rem 1.75rem;
+}
+
+.timeline__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .35rem;
+}
+
+.timeline__period {
+    font-family: var(--font-mono);
+    font-size: .8rem;
+    color: var(--text-muted);
+    letter-spacing: .02em;
+}
+
+.timeline__role {
+    font-size: 1.25rem;
+    margin: 0 0 .35rem;
+}
+
+.timeline__company {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .4rem;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: .95rem;
+}
+
+.timeline__sep {
+    opacity: .5;
+}
+
+.timeline__summary {
+    margin: 1rem 0 0;
+    color: var(--text);
+}
+
+.timeline__achievements {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 1.25rem;
+    display: grid;
+    gap: .55rem;
+}
+
+.timeline__achievements li {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    gap: .6rem;
+    align-items: start;
+    color: var(--text-muted);
+}
+
+.timeline__achievements ::deep .timeline__check {
+    margin-top: .2rem;
+    color: var(--success);
+}
+
+.timeline__item--automation .timeline__achievements ::deep .timeline__check {
+    color: var(--plc);
+}
+
+@media (max-width: 640px) {
+    .timeline::before {
+        left: 17px;
+    }
+
+    .timeline__item {
+        padding-left: 52px;
+    }
+
+    .timeline__marker {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        top: 22px;
+    }
+
+    .timeline__card {
+        padding: 1.25rem;
+    }
+}

@@ -1,0 +1,74 @@
+@using System.Diagnostics
+@using System.Runtime.InteropServices
+@implements IDisposable
+@inject RuntimeInfoService Runtime
+
+<article class="rm-card rm-card--server">
+    <header class="rm-card__head">
+        <span class="rm-card__mode"><Icon Name="server" Size="14" /> InteractiveServer</span>
+        <h3 class="rm-card__title">Interaktiv über SignalR</h3>
+        <p class="rm-card__lead">Die Komponente läuft auf dem Server. Der Browser bekommt nur die DOM-Änderungen über eine WebSocket-Verbindung.</p>
+    </header>
+
+    <div class="rm-card__status @(RendererInfo.IsInteractive ? "is-live" : "is-pending")">
+        @if (RendererInfo.IsInteractive)
+        {
+            <span><span class="live-dot is-live" aria-hidden="true"></span> Verbunden – Blazor-Circuit aktiv</span>
+        }
+        else
+        {
+            <span><span class="spinner spinner--sm"></span> Vorgerendert – Verbindung wird aufgebaut …</span>
+        }
+    </div>
+
+    <dl class="rm-card__facts">
+        <div><dt>Renderer</dt><dd><code>@RendererInfo.Name</code></dd></div>
+        <div><dt>Server</dt><dd>@Runtime.Hosting.Platform@(Runtime.Hosting.Region is { } region ? $" · {region}" : null)</dd></div>
+        <div><dt>Betriebssystem</dt><dd>@Shorten(RuntimeInformation.OSDescription)</dd></div>
+        <div><dt>Runtime</dt><dd>@RuntimeInformation.FrameworkDescription</dd></div>
+        <div><dt>Serverzeit</dt><dd class="rm-card__ticker">@Fmt.TimePrecise(GermanTime.ToGerman(_now)) Uhr</dd></div>
+    </dl>
+
+    <div class="rm-card__counter">
+        <button type="button" class="btn btn--secondary btn--sm" disabled="@(!RendererInfo.IsInteractive)" @onclick="Increment">
+            <Icon Name="pointer" Size="15" /> Klick mich
+        </button>
+        <output class="rm-card__count" aria-live="polite">@_count</output>
+        <span class="rm-card__latency">@_handled</span>
+    </div>
+
+    <p class="rm-card__explain">
+        Klick und Uhrzeit laufen über den Server: Event hin, neu rendern, nur der Unterschied zurück.
+        Ideal für Business-Anwendungen mit direktem Zugriff auf Datenbank und Dienste.
+    </p>
+</article>
+
+@code {
+    private int _count;
+    private string _handled = "Roundtrip zum Server";
+    private DateTimeOffset _now = DateTimeOffset.UtcNow;
+    private Timer? _timer;
+
+    protected override void OnInitialized()
+    {
+        if (RendererInfo.IsInteractive)
+        {
+            _timer = new Timer(_ => InvokeAsync(() =>
+            {
+                _now = DateTimeOffset.UtcNow;
+                StateHasChanged();
+            }), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(250));
+        }
+    }
+
+    private void Increment()
+    {
+        var started = Stopwatch.GetTimestamp();
+        _count++;
+        _handled = $"auf dem Server verarbeitet in {Fmt.Microseconds(Stopwatch.GetElapsedTime(started).TotalMicroseconds)}";
+    }
+
+    private static string Shorten(string os) => os.Length > 30 ? os[..30] + "…" : os;
+
+    public void Dispose() => _timer?.Dispose();
+}

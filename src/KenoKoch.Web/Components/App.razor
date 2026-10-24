@@ -1,0 +1,46 @@
+@using Microsoft.AspNetCore.Http
+<!DOCTYPE html>
+<html lang="de" data-theme="@_theme">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <base href="/" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="@(_theme == "light" ? "#f6f7fb" : "#07080f")" />
+    <meta name="author" content="Keno Koch" />
+    <link rel="icon" href="@Assets["favicon.svg"]" type="image/svg+xml" />
+    <link rel="manifest" href="@Assets["site.webmanifest"]" />
+    <link rel="preload" href="fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <ResourcePreloader />
+    <link rel="stylesheet" href="@Assets["css/app.css"]" />
+    <link rel="stylesheet" href="@Assets["KenoKoch.Web.styles.css"]" />
+    <ImportMap nonce="@_nonce" />
+    <HeadOutlet />
+</head>
+
+<body>
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+    <Routes />
+    <ReconnectModal />
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="@Assets["js/site.js"]"></script>
+</body>
+
+</html>
+
+@code {
+    private string? _theme;
+    private string? _nonce;
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Theme serverseitig aus dem Cookie rendern: kein Aufblitzen und stabil bei Enhanced Navigation.
+        var cookie = HttpContext?.Request.Cookies["theme"];
+        _theme = cookie is "light" ? "light" : "dark";
+        _nonce = HttpContext?.GetCspNonce();
+    }
+}

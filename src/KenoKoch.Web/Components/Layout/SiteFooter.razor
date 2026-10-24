@@ -1,0 +1,83 @@
+@using Microsoft.AspNetCore.Http
+@inject ProfileStore Profiles
+@inject RuntimeInfoService Runtime
+
+<footer class="site-footer">
+    <div class="container site-footer__grid">
+        <div class="site-footer__brand">
+            <a href="/" class="brand" aria-label="Zur Startseite">
+                <span class="brand__mark" aria-hidden="true">KK</span>
+                <span class="brand__text">
+                    <span class="brand__name">@Profile.Name</span>
+                    <span class="brand__role">@Profile.Headline</span>
+                </span>
+            </a>
+            <p class="site-footer__claim">Diese Website ist mein Arbeitsbeispiel: ein modularer Monolith mit .NET 10, Blazor und Azure SQL – gehostet auf Azure.</p>
+            <div class="social">
+                <SocialLinks Profile="Profile" />
+            </div>
+        </div>
+
+        <nav class="site-footer__nav" aria-label="Fußzeile">
+            <div>
+                <h3>Über mich</h3>
+                <a href="/#ueber-mich">Profil</a>
+                <a href="/#werdegang">Werdegang</a>
+                <a href="/#skills">Skills</a>
+                <a href="/#kontakt">Kontakt</a>
+            </div>
+            <div>
+                <h3>Technik</h3>
+                <a href="/demos">Live-Demos</a>
+                <a href="/architektur">Architektur</a>
+                <a href="/scalar" target="_blank" rel="noopener">API-Referenz</a>
+                <a href="/health/ready" target="_blank" rel="noopener">Health Check</a>
+            </div>
+            <div>
+                <h3>Rechtliches</h3>
+                <a href="/impressum">Impressum</a>
+                <a href="/datenschutz">Datenschutz</a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="container site-footer__bottom">
+        <span>© @DateTime.Now.Year @Profile.Name</span>
+        <span class="site-footer__stack">
+            <Icon Name="dotnet" Size="16" /> .NET 10 · Blazor · EF Core · Azure SQL · @Runtime.Hosting.Platform
+        </span>
+        <span class="site-footer__build">
+            v@(BuildInfo.Version)
+            @if (BuildInfo.CommitShort is { } commit)
+            {
+                <span>·</span>
+                @if (RepositoryUrl is { } repository)
+                {
+                    <a href="@($"{repository}/commit/{BuildInfo.Commit}")" target="_blank" rel="noopener"><code>@commit</code></a>
+                }
+                else
+                {
+                    <code>@commit</code>
+                }
+            }
+            @if (_renderTime is { } renderTime)
+            {
+                <span>·</span>
+                <span title="Serverseitige Renderzeit dieser Seite">gerendert in @Fmt.Milliseconds(renderTime)</span>
+            }
+        </span>
+    </div>
+</footer>
+
+@code {
+    private TimeSpan? _renderTime;
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private ProfileData Profile => Profiles.Profile;
+
+    private string? RepositoryUrl => Profile.Links.Repository is { } url && !url.Contains('[') ? url.TrimEnd('/') : null;
+
+    protected override void OnInitialized() => _renderTime = HttpContext?.GetElapsedSinceRequestStart();
+}

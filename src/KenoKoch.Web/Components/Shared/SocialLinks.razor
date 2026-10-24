@@ -1,0 +1,21 @@
+@* Kontakt- und Profil-Links; Platzhalter-URLs (mit "[") werden ausgeblendet, damit keine toten Links entstehen. *@
+<a class="social__link" href="@($"mailto:{Profile.Email}")" aria-label="E-Mail an @Profile.Email"><Icon Name="mail" Size="18" /></a>
+@if (Usable(Profile.Links.LinkedIn) is { } linkedIn)
+{
+    <a class="social__link" href="@linkedIn" target="_blank" rel="noopener me" aria-label="LinkedIn-Profil"><Icon Name="linkedin" Size="18" /></a>
+}
+@if (Usable(Profile.Links.GitHub) is { } gitHub)
+{
+    <a class="social__link" href="@gitHub" target="_blank" rel="noopener me" aria-label="GitHub-Profil"><Icon Name="github" Size="18" /></a>
+}
+@if (Usable(Profile.Links.Xing) is { } xing)
+{
+    <a class="social__link" href="@xing" target="_blank" rel="noopener me" aria-label="XING-Profil"><Icon Name="xing" Size="18" /></a>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public ProfileData Profile { get; set; } = default!;
+
+    public static string? Usable(string? url) => string.IsNullOrWhiteSpace(url) || url.Contains('[') ? null : url;
+}

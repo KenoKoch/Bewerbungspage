@@ -1,0 +1,179 @@
+// ─────────────────────────────────────────────────────────────────────────────
+//  Inhalte des Lebenslaufs. Alle Texte der Seite, die dich beschreiben, kommen
+//  aus dieser Datei. Platzhalter in [eckigen Klammern] bitte ersetzen –
+//  im Development-Modus zeigt die Seite an, welche noch offen sind.
+// ─────────────────────────────────────────────────────────────────────────────
+{
+  "name": "Keno Koch",
+  "firstName": "Keno",
+  "headline": "Softwareentwickler · C# / .NET",
+  "tagline": "Ich entwickle Business-Software mit C# und .NET – vom Datenmodell in SQL Server bis zur Oberfläche in Blazor. Meine Wurzeln liegen in der Automatisierungstechnik.",
+  "availability": "Offen für neue Herausforderungen",
+  "location": "[Ort], Deutschland",
+  "email": "kontakt@kenokoch.com",
+  "phone": null,
+  "cvUrl": null,
+  "links": {
+    "gitHub": "https://github.com/[benutzername]",
+    "linkedIn": "https://www.linkedin.com/in/[profil]",
+    "xing": null,
+    "repository": "https://github.com/[benutzername]/kenokoch.com"
+  },
+
+  "about": [
+    "Ich bin Softwareentwickler mit Schwerpunkt C# und .NET. Als Inhouse-Entwickler baue ich eine Unternehmensplattform als modularen Monolithen: eine gemeinsame technische Basis, auf der Business-Anwendungen für die einzelnen Fachabteilungen als eigenständige Module laufen.",
+    "Mein Weg in die Softwareentwicklung führte über die Automatisierungstechnik. Zwei Jahre lang habe ich als SPS-Softwareentwickler Anlagen mit Siemens S7, TIA Portal und WinCC programmiert und visualisiert. Diese Zeit prägt bis heute, wie ich arbeite: robust, nachvollziehbar und mit Blick auf die Menschen, die die Software jeden Tag bedienen.",
+    "Mich reizen Systeme, die über Jahre wachsen dürfen – mit klaren Modulgrenzen, sauberen Datenmodellen und einer Architektur, die neue Anforderungen aufnimmt, statt sie auszubremsen."
+  ],
+
+  "facts": [
+    { "icon": "briefcase", "label": "Aktuell", "value": "Softwareentwickler (Inhouse)" },
+    { "icon": "code", "label": "Schwerpunkt", "value": "C# · .NET · Blazor · SQL Server" },
+    { "icon": "factory", "label": "Hintergrund", "value": "2 Jahre SPS-Entwicklung (Siemens S7)" },
+    { "icon": "map-pin", "label": "Standort", "value": "[Ort], Deutschland" }
+  ],
+
+  "highlights": [
+    {
+      "icon": "layers",
+      "title": "Modulare Unternehmensplattform",
+      "text": "Ich entwickle eine Plattform als modularen Monolithen: eine gemeinsame technische Basis für alle Abteilungen, fachliche Anwendungen als klar getrennte Module, die unabhängig weiterentwickelt werden."
+    },
+    {
+      "icon": "factory",
+      "title": "Vom Shopfloor in die Cloud",
+      "text": "Zwei Jahre SPS-Programmierung mit S7, TIA Portal und WinCC haben mir gezeigt, wie Software in der echten Welt funktionieren muss: zuverlässig, verständlich und wartbar."
+    },
+    {
+      "icon": "users",
+      "title": "Nah an den Fachabteilungen",
+      "text": "Als Inhouse-Entwickler arbeite ich direkt mit den Menschen, die meine Software nutzen – von der Anforderung über die Umsetzung bis in den Betrieb."
+    }
+  ],
+
+  "experience": [
+    {
+      "period": "seit [Monat Jahr]",
+      "role": "Softwareentwickler (Inhouse)",
+      "company": "[Unternehmen]",
+      "location": "[Ort]",
+      "kind": "software",
+      "current": true,
+      "summary": "Entwicklung einer unternehmensweiten Plattform als modularer Monolith, auf der Business-Anwendungen für die einzelnen Fachabteilungen laufen.",
+      "achievements": [
+        "Konzeption und Umsetzung der Plattform als modularer Monolith mit klar getrennten Fachmodulen",
+        "Entwicklung von Business-Anwendungen für verschiedene Fachabteilungen auf der gemeinsamen Basis",
+        "Abstimmung der Anforderungen direkt mit den Fachabteilungen",
+        "[Weiterer Erfolg, z. B. abgelöstes Altsystem oder Anzahl der Module und Nutzer]"
+      ],
+      "tech": [ "C#", ".NET", "ASP.NET Core", "Blazor", "Entity Framework Core", "SQL Server", "Azure" ]
+    },
+    {
+      "period": "[Jahr] – [Jahr]",
+      "role": "SPS-Softwareentwickler",
+      "company": "[Unternehmen]",
+      "location": "[Ort]",
+      "kind": "automation",
+      "current": false,
+      "summary": "Zwei Jahre Steuerungs- und Visualisierungssoftware für Anlagen im Siemens-Umfeld.",
+      "achievements": [
+        "Programmierung von Siemens-S7-Steuerungen im TIA Portal (SCL, KOP/FUP)",
+        "Erstellung von HMI-Visualisierungen mit WinCC",
+        "Inbetriebnahme, Test und Fehlersuche an realen Anlagen",
+        "[Branche oder Anlagentyp ergänzen]"
+      ],
+      "tech": [ "Siemens S7", "TIA Portal", "WinCC", "SCL", "KOP / FUP" ]
+    }
+  ],
+
+  "education": [
+    {
+      "period": "[Jahr] – [Jahr]",
+      "title": "[Abschluss, z. B. Ausbildung oder Studium]",
+      "institution": "[Schule oder Hochschule]",
+      "details": null
+    }
+  ],
+
+  "skillGroups": [
+    {
+      "name": "Backend & .NET",
+      "icon": "server",
+      "description": "Robuste Services und APIs mit modernem .NET.",
+      "skills": [
+        { "name": "C#", "focus": true },
+        { "name": ".NET 10", "focus": true },
+        { "name": "ASP.NET Core", "focus": true },
+        { "name": "Minimal APIs" },
+        { "name": "SignalR" },
+        { "name": "LINQ" },
+        { "name": "xUnit" }
+      ]
+    },
+    {
+      "name": "Web & UI",
+      "icon": "blazor",
+      "description": "Interaktive Oberflächen komplett in C#.",
+      "skills": [
+        { "name": "Blazor", "focus": true },
+        { "name": "Razor Components" },
+        { "name": "WebAssembly" },
+        { "name": "HTML & CSS" },
+        { "name": "JavaScript-Interop" }
+      ]
+    },
+    {
+      "name": "Daten",
+      "icon": "database",
+      "description": "Saubere Datenmodelle und performante Abfragen.",
+      "skills": [
+        { "name": "SQL Server", "focus": true },
+        { "name": "Entity Framework Core", "focus": true },
+        { "name": "T-SQL" },
+        { "name": "Datenmodellierung" },
+        { "name": "Azure SQL" }
+      ]
+    },
+    {
+      "name": "Architektur",
+      "icon": "puzzle",
+      "description": "Systeme, die über Jahre wachsen dürfen.",
+      "skills": [
+        { "name": "Modularer Monolith", "focus": true },
+        { "name": "Domain-Driven Design" },
+        { "name": "Clean Code" },
+        { "name": "REST-APIs" },
+        { "name": "Integration Events" }
+      ]
+    },
+    {
+      "name": "Cloud & DevOps",
+      "icon": "cloud",
+      "description": "Vom Commit bis in die Azure-Cloud.",
+      "skills": [
+        { "name": "Azure App Service" },
+        { "name": "Azure SQL" },
+        { "name": "Bicep" },
+        { "name": "GitHub Actions" },
+        { "name": "Git" }
+      ]
+    },
+    {
+      "name": "Automatisierung",
+      "icon": "factory",
+      "description": "Steuerungstechnik aus der Praxis.",
+      "skills": [
+        { "name": "Siemens S7", "focus": true },
+        { "name": "TIA Portal", "focus": true },
+        { "name": "WinCC" },
+        { "name": "SCL" },
+        { "name": "KOP / FUP" }
+      ]
+    }
+  ],
+
+  "languages": [
+    { "name": "Deutsch", "level": "Muttersprache" },
+    { "name": "Englisch", "level": "[Niveau, z. B. verhandlungssicher]" }
+  ]
+}

@@ -1,0 +1,142 @@
+@implements IDisposable
+@inject RuntimeInfoService Runtime
+@inject ProfileStore Profiles
+
+<div class="runtime">
+    <div class="runtime__head">
+        <div class="runtime__status @(_snapshot is null ? null : "is-live")">
+            <span class="live-dot @(_snapshot is null ? null : "is-live")" aria-hidden="true"></span>
+            @(_snapshot is null ? "Verbindung wird aufgebaut …" : $"Live · aktualisiert {Fmt.Time(GermanTime.ToGerman(_snapshot.Timestamp))} Uhr")
+        </div>
+        <span class="runtime__hint">Alle 2 Sekunden neu vom Server, auf dem diese Seite gerade läuft.</span>
+    </div>
+
+    <div class="runtime__grid">
+        <section class="runtime__group card">
+            <h3><Icon Name="cloud" Size="16" /> Hosting</h3>
+            <dl>
+                <div><dt>Plattform</dt><dd>@Runtime.Hosting.Platform</dd></div>
+                <div><dt>Region</dt><dd>@(Runtime.Hosting.Region ?? "–")</dd></div>
+                <div><dt>Instanz</dt><dd><code>@(Runtime.Hosting.InstanceId ?? "lokal")</code></dd></div>
+                <div><dt>Tarif</dt><dd>@(Runtime.Hosting.Plan ?? "–")</dd></div>
+                <div><dt>Umgebung</dt><dd>@(_snapshot?.Process.Environment ?? "–")</dd></div>
+            </dl>
+        </section>
+
+        <section class="runtime__group card">
+            <h3><Icon Name="dotnet" Size="18" /> Laufzeit</h3>
+            <dl>
+                <div><dt>.NET</dt><dd>@(_snapshot?.Process.Framework ?? "–")</dd></div>
+                <div><dt>Betriebssystem</dt><dd>@(_snapshot?.Process.OperatingSystem ?? "–")</dd></div>
+                <div><dt>Architektur</dt><dd>@(_snapshot is null ? "–" : $"{_snapshot.Process.Architecture} · {_snapshot.Process.ProcessorCount} Kerne")</dd></div>
+                <div><dt>Prozess läuft seit</dt><dd>@(_snapshot is null ? "–" : Fmt.Uptime(_snapshot.Process.Uptime))</dd></div>
+                <div><dt>Thread-Pool</dt><dd>@(_snapshot is null ? "–" : $"{_snapshot.Process.ThreadPoolThreads} Threads")</dd></div>
+            </dl>
+        </section>
+
+        <section class="runtime__group card">
+            <h3><Icon Name="gauge" Size="16" /> Ressourcen</h3>
+            @if (_snapshot is not null)
+            {
+                <div class="meter">
+                    <div class="meter__label"><span>CPU</span><strong>@Fmt.Percent(_snapshot.Process.CpuPercent)</strong></div>
+                    <div class="meter__track"><span class="meter__fill" style="width:@(Math.Clamp(_snapshot.Process.CpuPercent, 1, 100).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></span></div>
+                </div>
+            }
+            <dl>
+                <div><dt>Arbeitsspeicher</dt><dd>@(_snapshot is null ? "–" : Fmt.Bytes(_snapshot.Process.WorkingSetBytes))</dd></div>
+                <div><dt>Managed Heap</dt><dd>@(_snapshot is null ? "–" : Fmt.Bytes(_snapshot.Process.ManagedHeapBytes))</dd></div>
+                <div><dt>GC-Läufe (Gen 0/1/2)</dt><dd>@(_snapshot is null ? "–" : $"{_snapshot.Process.Gen0Collections} / {_snapshot.Process.Gen1Collections} / {_snapshot.Process.Gen2Collections}")</dd></div>
+            </dl>
+        </section>
+
+        <section class="runtime__group card">
+            <h3><Icon Name="database" Size="16" /> Datenbank</h3>
+            @if (_snapshot?.Database is { } db)
+            {
+                <dl>
+                    <div><dt>Status</dt><dd><span class="status-dot status-dot--@(db.Status == "Ready" ? "ok" : "warn")"></span>@(db.Status == "Ready" ? "Verbunden" : db.Message)</dd></div>
+                    <div><dt>Engine</dt><dd>@(db.Engine ?? "–")</dd></div>
+                    <div><dt>Service-Tier</dt><dd>@(db.ServiceObjective ?? "–")</dd></div>
+                    <div><dt>Latenz (Abfrage)</dt><dd>@(db.LatencyMilliseconds is { } latency ? Fmt.Milliseconds(latency) : "–")</dd></div>
+                    <div><dt>Anmeldung</dt><dd>@db.Authentication</dd></div>
+                </dl>
+            }
+            else
+            {
+                <p class="runtime__empty">Wird geladen …</p>
+            }
+        </section>
+
+        <section class="runtime__group card">
+            <h3><Icon Name="git-branch" Size="16" /> Build &amp; Betrieb</h3>
+            <dl>
+                <div><dt>Version</dt><dd>@BuildInfo.Version</dd></div>
+                <div>
+                    <dt>Commit</dt>
+                    <dd>
+                        @if (BuildInfo.CommitShort is { } commit && SocialLinks.Usable(Profiles.Profile.Links.Repository) is { } repository)
+                        {
+                            <a href="@($"{repository.TrimEnd('/')}/commit/{BuildInfo.Commit}")" target="_blank" rel="noopener"><code>@commit</code></a>
+                        }
+                        else
+                        {
+                            <code>@(BuildInfo.CommitShort ?? "–")</code>
+                        }
+                    </dd>
+                </div>
+                <div><dt>Gebaut</dt><dd>@(BuildInfo.BuiltAt is { } built ? Fmt.DateTime(GermanTime.ToGerman(built)) : "–")</dd></div>
+                <div><dt>Telemetrie</dt><dd>@(Runtime.TelemetryEnabled ? "Application Insights (OpenTelemetry)" : "nicht konfiguriert")</dd></div>
+                <div><dt>Health</dt><dd><a href="/health/ready" target="_blank" rel="noopener"><code>/health/ready</code></a></dd></div>
+            </dl>
+        </section>
+    </div>
+</div>
+
+@code {
+    private RuntimeSnapshot? _snapshot;
+    private CancellationTokenSource? _cts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        _cts = new CancellationTokenSource();
+        _snapshot = await Runtime.GetSnapshotAsync(includeDatabase: true, _cts.Token);
+        _ = RefreshLoopAsync(_cts.Token);
+    }
+
+    private async Task RefreshLoopAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                var snapshot = await Runtime.GetSnapshotAsync(includeDatabase: true, cancellationToken);
+                await InvokeAsync(() =>
+                {
+                    _snapshot = snapshot;
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Komponente entfernt.
+        }
+        catch (ObjectDisposedException)
+        {
+            // Circuit geschlossen.
+        }
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+}

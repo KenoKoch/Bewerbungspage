@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <Description>Modul "Besucher &amp; Echtzeit": Live-Besucher über Blazor-Circuits, datensparsame Statistik, Aktivitäts-Feed.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\KenoKoch.BuildingBlocks\KenoKoch.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\..\KenoKoch.UI\KenoKoch.UI.csproj" />
+    <!-- Andere Module ausschließlich über ihre Contracts -->
+    <ProjectReference Include="..\..\Guestbook\KenoKoch.Modules.Guestbook.Contracts\KenoKoch.Modules.Guestbook.Contracts.csproj" />
+    <ProjectReference Include="..\..\Plc\KenoKoch.Modules.Plc.Contracts\KenoKoch.Modules.Plc.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="KenoKoch.Tests" />
+  </ItemGroup>
+
+</Project>

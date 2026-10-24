@@ -1,0 +1,18 @@
+.sparkline {
+    flex: none;
+    overflow: visible;
+}
+
+.sparkline__line {
+    fill: none;
+    stroke: var(--viz-deemphasis);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.sparkline__dot {
+    fill: var(--series-1);
+    stroke: var(--bg-elev);
+    stroke-width: 2;
+}

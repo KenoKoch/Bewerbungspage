@@ -1,0 +1,43 @@
+@inject ProfileStore Store
+
+<div class="skill-grid">
+    @foreach (var group in Store.Profile.SkillGroups)
+    {
+        <article class="card card--interactive skill-card spotlight" data-reveal>
+            <div class="skill-card__head">
+                <span class="icon-tile @(group.Icon == "factory" ? "icon-tile--plc" : null)"><Icon Name="@group.Icon" Size="22" /></span>
+                <div>
+                    <h3 class="skill-card__title">@group.Name</h3>
+                    @if (!string.IsNullOrWhiteSpace(group.Description))
+                    {
+                        <p class="skill-card__description">@group.Description</p>
+                    }
+                </div>
+            </div>
+            <ul class="chip-list">
+                @foreach (var skill in group.Skills)
+                {
+                    <li class="chip @(skill.Focus ? "chip--focus" : null)">@skill.Name</li>
+                }
+            </ul>
+        </article>
+    }
+</div>
+
+<div class="skill-footer" data-reveal>
+    <p class="skill-legend"><span class="chip chip--focus chip--sm">Schwerpunkt</span> = damit arbeite ich täglich</p>
+    @if (Store.Profile.Languages.Count > 0)
+    {
+        <p class="skill-languages">
+            <Icon Name="languages" Size="16" />
+            @foreach (var (language, index) in Store.Profile.Languages.Select((l, i) => (l, i)))
+            {
+                @if (index > 0)
+                {
+                    <span class="skill-languages__sep" aria-hidden="true">·</span>
+                }
+                <span><strong>@language.Name</strong> – @language.Level</span>
+            }
+        </p>
+    }
+</div>

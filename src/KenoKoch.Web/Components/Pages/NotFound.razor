@@ -1,0 +1,15 @@
+@page "/not-found"
+@layout MainLayout
+
+<SeoHead Title="Seite nicht gefunden" Description="Diese Seite gibt es leider nicht." Path="/not-found" NoIndex="true" />
+
+<section class="status-page container">
+    <div class="status-page__code" aria-hidden="true">404</div>
+    <h1 tabindex="-1">Diese Seite gibt es nicht.</h1>
+    <p>Vielleicht ein Tippfehler oder ein alter Link. Wie wäre es stattdessen mit einer der Live-Demos?</p>
+    <div class="status-page__actions">
+        <a class="btn btn--primary" href="/">Zur Startseite</a>
+        <a class="btn btn--secondary" href="/demos">Live-Demos</a>
+    </div>
+    <p class="status-page__plc"><code>// FB_Router: Ziel nicht gefunden – Meldung 404 kommend</code></p>
+</section>

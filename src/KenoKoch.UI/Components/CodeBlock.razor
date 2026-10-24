@@ -1,0 +1,67 @@
+@* Code-Fenster mit Syntax-Highlighting, Zeilennummern und Kopier-Button (Kopieren via site.js, funktioniert auch ohne Interaktivität). *@
+<figure class="code-block @(Compact ? "code-block--compact" : null) @(Animate ? "code-block--animate" : null) @Class">
+    @if (!HideHeader)
+    {
+        <figcaption class="code-block__header">
+            <span class="code-block__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            @if (!string.IsNullOrEmpty(Title))
+            {
+                <span class="code-block__title"><Icon Name="file-code" Size="14" /> @Title</span>
+            }
+            <span class="code-block__spacer"></span>
+            <span class="code-block__lang">@CodeHighlighter.LanguageLabel(Language)</span>
+            <button type="button" class="code-block__copy" data-copy-target="@_id" aria-label="Code in die Zwischenablage kopieren">
+                <Icon Name="copy" Size="14" />
+                <span class="code-block__copy-label">Kopieren</span>
+            </button>
+        </figcaption>
+    }
+    <pre class="code-block__pre @(LineNumbers ? "code-block__pre--lines" : null)" style="@(MaxHeight is null ? null : $"max-height:{MaxHeight}")" tabindex="0"><code id="@_id">@((MarkupString)_html)</code></pre>
+</figure>
+
+@code {
+    private readonly string _id = "code-" + Guid.NewGuid().ToString("N")[..10];
+    private string _html = string.Empty;
+    private string? _renderedKey;
+
+    [Parameter, EditorRequired]
+    public string Code { get; set; } = string.Empty;
+
+    [Parameter]
+    public CodeLanguage Language { get; set; } = CodeLanguage.CSharp;
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public bool LineNumbers { get; set; } = true;
+
+    /// <summary>Hervorzuhebende Zeilen, z. B. "3-5,9".</summary>
+    [Parameter]
+    public string? Highlight { get; set; }
+
+    [Parameter]
+    public string? MaxHeight { get; set; }
+
+    [Parameter]
+    public bool Animate { get; set; }
+
+    [Parameter]
+    public bool Compact { get; set; }
+
+    [Parameter]
+    public bool HideHeader { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        var key = $"{Language}|{Highlight}|{Code}";
+        if (key != _renderedKey)
+        {
+            _html = CodeHighlighter.ToHtml(Code, Language, CodeHighlighter.ParseLineRanges(Highlight));
+            _renderedKey = key;
+        }
+    }
+}

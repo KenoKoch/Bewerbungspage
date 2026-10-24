@@ -1,0 +1,127 @@
+@page "/demos"
+@using Microsoft.AspNetCore.Http
+@using KenoKoch.Modules.Analytics.Components
+@using KenoKoch.Modules.Guestbook.Components
+@using KenoKoch.Modules.Plc.Components
+
+<SeoHead Title="Live-Demos"
+         Description="Live-Demos auf dem Stack, mit dem ich arbeite: Blazor-Render-Modi, SPS-Simulator mit HMI, Echtzeit über SignalR, EF Core mit Azure SQL, modularer Monolith, WebAssembly und Minimal APIs."
+         Path="/demos" />
+
+<section class="page-hero">
+    <div class="page-hero__bg" aria-hidden="true"></div>
+    <div class="container">
+        <span class="eyebrow"><span class="live-dot is-live" aria-hidden="true"></span> Live-Demos</span>
+        <h1 class="page-hero__title" tabindex="-1">Diese Seite läuft auf dem Stack, <span class="text-gradient">mit dem ich arbeite.</span></h1>
+        <p class="page-hero__lead">.NET 10, Blazor, EF Core, Azure SQL und Azure App Service. Jede Demo hier ist echt, läuft live auf dem Server oder in Ihrem Browser – und verlinkt ihren Quelltext.</p>
+        <nav class="toc" aria-label="Demos auf dieser Seite">
+            @foreach (var (anchor, label, index) in Toc.Select((t, i) => (t.Anchor, t.Label, i)))
+            {
+                <a href="@($"/demos#{anchor}")" class="toc__item"><span class="toc__number">@((index + 1).ToString("00"))</span>@label</a>
+            }
+        </nav>
+    </div>
+</section>
+
+<DemoSection Id="render-modi" Number="01" Icon="layers" Kicker="Blazor · Render-Modi"
+             Title="Drei Arten, eine Komponente auszuführen"
+             Lead="Blazor kann Komponenten statisch auf dem Server rendern, interaktiv über SignalR betreiben oder komplett im Browser per WebAssembly ausführen. Hier laufen alle drei Varianten nebeneinander auf derselben Seite."
+             Points="@(["Statisches SSR mit Enhanced Forms – ganz ohne dauerhafte Verbindung", "InteractiveServer: UI-Logik auf dem Server, DOM-Diffs über WebSocket", "InteractiveWebAssembly: .NET-Runtime im Browser, Zustand per [PersistentState] übergeben"])"
+             SourcePath="src/KenoKoch.Web/Components/Demos">
+    <div class="rm-grid">
+        <SsrCounterCard />
+        <ServerRenderCard @rendermode="InteractiveServer" />
+        <WasmRenderCard @rendermode="InteractiveWebAssembly" />
+    </div>
+</DemoSection>
+
+<DemoSection Id="sps" Number="02" Icon="factory" Kicker="Blazor Server · Hintergrund-Tasks · SCL → C#"
+             Title="SPS-Simulator mit HMI"
+             Lead="Mein Hintergrund in der Automatisierung, umgesetzt mit .NET: Jeder Besucher bekommt eine eigene Soft-SPS, die eine Tankanlage steuert. Der Funktionsbaustein ist Zeile für Zeile aus SCL übertragen, das Bedienbild orientiert sich an WinCC."
+             Points="@(["Zyklischer Scan alle 100 ms mit Prozessabbild (PAE/PAA) und Analogwert-Skalierung wie in der S7", "Zweipunktregelung, Verriegelungen, NOT-HALT, Überfüllsicherung und Meldesystem mit Quittierung", "SCL-Original und laufender C#-Quelltext direkt im Simulator einsehbar"])"
+             SourcePath="src/Modules/Plc">
+    <PlcDemo @rendermode="InteractiveServer" />
+</DemoSection>
+
+<DemoSection Id="echtzeit" Number="03" Icon="zap" Kicker="SignalR · CircuitHandler · Integration Events"
+             Title="Echtzeit für alle Besucher"
+             Lead="Jede geöffnete Seite hält eine Blazor-Verbindung zum Server. Ein CircuitHandler zählt sie, Module melden Ereignisse über den Event-Bus – und alle Besucher sehen Änderungen sofort, ganz ohne Polling."
+             Points="@(["Live-Zähler über Blazor-Circuits statt Tracking-Cookies", "Emoji-Reaktionen werden an alle verbundenen Browser gepusht", "SPS-Starts und Gästebucheinträge erscheinen als Events aus anderen Modulen"])"
+             SourcePath="src/Modules/Analytics">
+    <ActivityPanel @rendermode="InteractiveServer" />
+</DemoSection>
+
+<DemoSection Id="daten" Number="04" Icon="database" Kicker="EF Core 10 · Azure SQL · Validierung"
+             Title="Daten mit Entity Framework Core"
+             Lead="Das Gästebuch speichert Einträge mit EF Core im eigenen Schema [guestbook]. Der SQL-Inspector zeigt das tatsächlich erzeugte SQL samt Parametern und Laufzeit. Darunter: die Besucherstatistik, aggregiert im Schema [analytics]."
+             Points="@(["DataAnnotations-Validierung, Honeypot und Rate Limiting mit System.Threading.RateLimiting", "Abfragen per ToQueryString() und DbCommandInterceptor sichtbar gemacht", "Statistik ohne Cookies: gepuffert, gebündelt geschrieben per ExecuteUpdate"])"
+             SourcePath="src/Modules/Guestbook">
+    <div class="stack-lg">
+        <GuestbookDemo VisitorKey="@_visitorKey" @rendermode="InteractiveServer" />
+        <VisitorChart @rendermode="InteractiveServer" />
+    </div>
+</DemoSection>
+
+<DemoSection Id="module" Number="05" Icon="puzzle" Kicker="Architektur · Reflection · Endpoint-Metadaten"
+             Title="Der modulare Monolith von innen"
+             Lead="Was Sie hier sehen, ist nicht von Hand gepflegt: Module, Datenbankschemas, Migrationen, Events und Endpunkte werden zur Laufzeit aus der Anwendung ausgelesen."
+             Points="@(["Jedes Modul registriert sich über IModule beim Host", "Endpunkte tragen Metadaten und lassen sich ihrem Modul zuordnen", "Abhängigkeiten werden aus den Assembly-Referenzen ermittelt"])"
+             SourcePath="src/KenoKoch.BuildingBlocks/Modules">
+    <ModuleExplorer />
+</DemoSection>
+
+<DemoSection Id="wasm" Number="06" Icon="cpu" Kicker="WebAssembly · JS-Interop"
+             Title="C# rechnet in Ihrem Browser"
+             Lead="Die Mandelbrot-Menge wird von .NET in WebAssembly berechnet – Pixel für Pixel in C#, gezeichnet über JavaScript-Interop auf ein Canvas. Der Server ist daran nicht beteiligt: Schauen Sie gern in den Netzwerk-Tab."
+             Points="@(["Rechenintensive Logik läuft komplett clientseitig", "Streifenweises Rendern hält die Oberfläche flüssig", "byte[]-Puffer werden effizient an das Canvas übergeben"])"
+             SourcePath="src/KenoKoch.Web.Client/Components">
+    <div class="wasm-slot wasm-slot--mandelbrot">
+        <MandelbrotExplorer @rendermode="WasmWithoutPrerender" />
+    </div>
+</DemoSection>
+
+<DemoSection Id="api" Number="07" Icon="network" Kicker="Minimal APIs · OpenAPI · Rate Limiting"
+             Title="Eine API für alles, was Sie hier sehen"
+             Lead="Jedes Modul bringt eigene Minimal-API-Endpunkte mit. Die OpenAPI-Beschreibung entsteht automatisch, die Abfragen unten schickt eine WebAssembly-Komponente per HttpClient direkt aus Ihrem Browser."
+             Points="@(["OpenAPI 3.1 aus Microsoft.AspNetCore.OpenApi, interaktive Referenz mit Scalar", "Typisierte Ergebnisse mit TypedResults und ProblemDetails", "Rate Limiting pro IP-Adresse für alle /api-Endpunkte"])"
+             SourcePath="src/KenoKoch.Web/Hosting">
+    <div class="wasm-slot wasm-slot--api">
+        <ApiPlayground @rendermode="WasmWithoutPrerender" />
+    </div>
+    <div class="api-links">
+        <a class="btn btn--secondary" href="/scalar" target="_blank" rel="noopener"><Icon Name="book-open" Size="16" /> API-Referenz (Scalar)</a>
+        <a class="btn btn--ghost" href="/openapi/v1.json" target="_blank" rel="noopener"><Icon Name="file-code" Size="16" /> OpenAPI-Dokument</a>
+        <a class="btn btn--ghost" href="/health/ready" target="_blank" rel="noopener"><Icon Name="activity" Size="16" /> Health Check</a>
+    </div>
+</DemoSection>
+
+<DemoSection Id="laufzeit" Number="08" Icon="cloud" Kicker="Azure App Service · Managed Identity · Observability"
+             Title="Unter der Haube – live vom Server"
+             Lead="Diese Werte liest der Server gerade über sich selbst aus: Azure-Region und Instanz, .NET-Version, Speicher, Garbage Collector und die Latenz zur Azure-SQL-Datenbank, mit der er sich passwortlos per Managed Identity verbindet."
+             Points="@(["App-Service-Umgebungsvariablen statt hart kodierter Werte", "Datenbank-Probe mit SERVERPROPERTY und DATABASEPROPERTYEX", "Telemetrie über OpenTelemetry nach Application Insights"])"
+             SourcePath="src/KenoKoch.Web/Hosting/RuntimeInfoService.cs">
+    <RuntimePanel @rendermode="InteractiveServer" />
+</DemoSection>
+
+@code {
+    private static readonly IComponentRenderMode WasmWithoutPrerender = new InteractiveWebAssemblyRenderMode(prerender: false);
+
+    private static readonly (string Anchor, string Label)[] Toc =
+    [
+        ("render-modi", "Render-Modi"),
+        ("sps", "SPS-Simulator"),
+        ("echtzeit", "Echtzeit"),
+        ("daten", "EF Core & SQL"),
+        ("module", "Modularer Monolith"),
+        ("wasm", "WebAssembly"),
+        ("api", "Minimal APIs"),
+        ("laufzeit", "Azure & Laufzeit"),
+    ];
+
+    private string _visitorKey = "anonymous";
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    protected override void OnInitialized() => _visitorKey = VisitorKey.From(HttpContext);
+}

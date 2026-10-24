@@ -1,0 +1,271 @@
+@using System.Globalization
+@using Microsoft.Extensions.Logging
+@implements IDisposable
+@inject StatsService Stats
+@inject DatabaseState Database
+@inject ILogger<VisitorChart> Logger
+
+<figure class="vc card">
+    <figcaption class="vc__head">
+        <div>
+            <h3 class="vc__title">Seitenaufrufe pro Tag</h3>
+            <p class="vc__subtitle">Letzte 14 Tage · live aus Azure SQL (Schema <code>analytics</code>)</p>
+        </div>
+        @if (_stats is not null)
+        {
+            <div class="vc__kpis">
+                <div><span class="vc__kpi-value">@Fmt.Number(_stats.PageViewsToday)</span><span class="vc__kpi-label">heute</span></div>
+                <div><span class="vc__kpi-value">@Fmt.Number(_stats.Last14Days.Sum(d => d.Count))</span><span class="vc__kpi-label">14 Tage</span></div>
+            </div>
+        }
+    </figcaption>
+
+    @if (!_interactive || (_stats is null && Database.IsReady && _error is null))
+    {
+        <div class="vc__placeholder skeleton" aria-hidden="true"></div>
+    }
+    else if (!Database.IsReady)
+    {
+        <DatabaseStatusNotice Status="@Database.Status.ToString()" Message="@Database.Message" />
+    }
+    else if (_error is not null)
+    {
+        <p class="alert alert--error">@_error</p>
+    }
+    else if (_stats is not null)
+    {
+        <div class="vc__plot">
+            <div class="vc__canvas">
+            <svg class="vc__svg" viewBox="0 0 @Inv(W) @Inv(H)" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                @foreach (var tick in _ticks)
+                {
+                    <line class="vc__grid" x1="@Inv(Left)" x2="@Inv(W - Right)" y1="@Inv(tick.Y)" y2="@Inv(tick.Y)" />
+                }
+                @foreach (var bar in _bars)
+                {
+                    @if (bar.Path is not null)
+                    {
+                        <path class="vc__bar @(bar.IsToday ? "vc__bar--today" : null)" d="@bar.Path" />
+                    }
+                }
+            </svg>
+
+            @* Achsen und Beschriftungen als HTML: bleiben scharf und skalieren nicht mit. *@
+            <div class="vc__yaxis" aria-hidden="true">
+                @foreach (var tick in _ticks)
+                {
+                    <span style="top:@Inv(tick.Y / H * 100)%">@Fmt.Number(tick.Value)</span>
+                }
+            </div>
+
+            <div class="vc__labels" aria-hidden="true">
+                @foreach (var bar in _bars.Where(b => b.ShowValue))
+                {
+                    <span class="vc__value" style="left:@Inv(bar.CenterX / W * 100)%;top:@Inv(bar.Y / H * 100)%">@Fmt.Number(bar.Day.Count)</span>
+                }
+            </div>
+
+            <div class="vc__hits" role="list" aria-label="Seitenaufrufe pro Tag">
+                @foreach (var (bar, index) in _bars.Select((b, i) => (b, i)))
+                {
+                    <span class="vc__hit @(index < 2 ? "vc__hit--start" : index > _bars.Count - 3 ? "vc__hit--end" : null)"
+                          role="listitem"
+                          tabindex="0"
+                          aria-label="@($"{LongDate(bar.Day.Date)}: {Fmt.Number(bar.Day.Count)} Aufrufe")"
+                          style="--top:@Inv((bar.Y - Top) / PlotHeight * 100)%">
+                        <span class="vc__tip">
+                            <strong>@Fmt.Number(bar.Day.Count) @(bar.Day.Count == 1 ? "Aufruf" : "Aufrufe")</strong>
+                            <span>@LongDate(bar.Day.Date)</span>
+                        </span>
+                    </span>
+                }
+            </div>
+            </div>
+
+            <div class="vc__xaxis" aria-hidden="true">
+                @foreach (var bar in _bars)
+                {
+                    <span class="@(bar.IsToday ? "is-today" : null)">@(bar.IsToday ? "Heute" : Weekday(bar.Day.Date))</span>
+                }
+            </div>
+        </div>
+
+        <div class="vc__footer">
+            <details class="vc__details">
+                <summary>Als Tabelle anzeigen</summary>
+                <table class="data-table">
+                    <thead><tr><th scope="col">Tag</th><th scope="col" class="num">Aufrufe</th></tr></thead>
+                    <tbody>
+                        @foreach (var day in _stats.Last14Days.Reverse())
+                        {
+                            <tr><td>@LongDate(day.Date)</td><td class="num">@Fmt.Number(day.Count)</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </details>
+            <details class="vc__details">
+                <summary>SQL dieser Auswertung · @Fmt.Milliseconds(_stats.QueryDuration)</summary>
+                <CodeBlock Code="@_stats.QuerySql" Language="CodeLanguage.Sql" HideHeader="true" Compact="true" LineNumbers="false" />
+            </details>
+            @if (_stats.TopPages.Count > 0)
+            {
+                <div class="vc__top">
+                    <span class="vc__top-title">Meistbesucht</span>
+                    <ol>
+                        @foreach (var topPage in _stats.TopPages.Take(4))
+                        {
+                            <li><code>@topPage.Path</code><span>@Fmt.Number(topPage.Count)</span></li>
+                        }
+                    </ol>
+                </div>
+            }
+        </div>
+    }
+</figure>
+
+@code {
+    private const double W = 640;
+    private const double H = 250;
+    private const double Left = 44;
+    private const double Right = 10;
+    private const double Top = 26;
+    private const double Bottom = 4;
+    private const double PlotHeight = H - Top - Bottom;
+    private const double MaxBarWidth = 24;
+
+    private static readonly string[] Weekdays = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+    private static readonly string[] WeekdaysLong = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+
+    private sealed record Tick(double Value, double Y);
+
+    private sealed record Bar(DailyCount Day, double CenterX, double Y, string? Path, bool IsToday, bool ShowValue);
+
+    private VisitorStatistics? _stats;
+    private IReadOnlyList<Bar> _bars = [];
+    private IReadOnlyList<Tick> _ticks = [];
+    private bool _interactive;
+    private bool _disposed;
+    private string? _error;
+    private Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _interactive = RendererInfo.IsInteractive;
+        if (!_interactive)
+        {
+            return;
+        }
+
+        Database.Changed += OnDatabaseChanged;
+        await LoadAsync();
+        _timer = new Timer(_ => _ = InvokeAsync(async () =>
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            await LoadAsync();
+            StateHasChanged();
+        }), null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+    }
+
+    private async Task LoadAsync()
+    {
+        if (!Database.IsReady)
+        {
+            return;
+        }
+
+        try
+        {
+            var stats = await Stats.GetAsync();
+            if (stats is not null)
+            {
+                _stats = stats;
+                _error = null;
+                Layout(stats.Last14Days);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Statistik für das Diagramm konnte nicht geladen werden.");
+            _error ??= "Die Statistik konnte gerade nicht geladen werden.";
+        }
+    }
+
+    private void Layout(IReadOnlyList<DailyCount> days)
+    {
+        var max = days.Count == 0 ? 0 : days.Max(d => d.Count);
+        var step = NiceStep(Math.Max(max, 4) / 4d);
+        var axisMax = Math.Max(step, Math.Ceiling(max / step) * step);
+
+        _ticks = Enumerable.Range(0, (int)Math.Round(axisMax / step) + 1)
+            .Select(i => new Tick(i * step, Top + PlotHeight - i * step / axisMax * PlotHeight))
+            .ToArray();
+
+        var band = (W - Left - Right) / days.Count;
+        var barWidth = Math.Min(MaxBarWidth, band * 0.6);
+        var maxIndex = days.Select((d, i) => (d.Count, i)).MaxBy(x => x.Count).i;
+        var baseline = Top + PlotHeight;
+
+        _bars = days.Select((day, index) =>
+        {
+            var height = day.Count / axisMax * PlotHeight;
+            var x = Left + index * band + (band - barWidth) / 2;
+            var y = baseline - height;
+            var isToday = index == days.Count - 1;
+            var showValue = day.Count > 0 && (isToday || index == maxIndex);
+            return new Bar(day, x + barWidth / 2, y, height > 0 ? BarPath(x, y, barWidth, baseline) : null, isToday, showValue);
+        }).ToArray();
+    }
+
+    /// <summary>Säule mit 4px-Rundung am Datenende, eckig an der Grundlinie.</summary>
+    private static string BarPath(double x, double y, double width, double baseline)
+    {
+        var r = Math.Min(4, Math.Min(baseline - y, width / 2));
+        return $"M{Inv(x)},{Inv(baseline)} V{Inv(y + r)} Q{Inv(x)},{Inv(y)} {Inv(x + r)},{Inv(y)} H{Inv(x + width - r)} Q{Inv(x + width)},{Inv(y)} {Inv(x + width)},{Inv(y + r)} V{Inv(baseline)} Z";
+    }
+
+    private static double NiceStep(double raw)
+    {
+        var magnitude = Math.Pow(10, Math.Floor(Math.Log10(raw)));
+        foreach (var factor in new[] { 1d, 2d, 2.5d, 5d, 10d })
+        {
+            if (factor * magnitude >= raw)
+            {
+                return Math.Max(1, factor * magnitude);
+            }
+        }
+
+        return Math.Max(1, 10 * magnitude);
+    }
+
+    private static string Inv(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+
+    private static string Weekday(DateOnly date) => Weekdays[(int)date.DayOfWeek];
+
+    private static string LongDate(DateOnly date) => $"{WeekdaysLong[(int)date.DayOfWeek]}, {Fmt.Date(date)}";
+
+    private void OnDatabaseChanged() => _ = InvokeAsync(async () =>
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (_stats is null)
+        {
+            await LoadAsync();
+        }
+
+        StateHasChanged();
+    });
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _timer?.Dispose();
+        Database.Changed -= OnDatabaseChanged;
+    }
+}

@@ -1,0 +1,94 @@
+@page "/datenschutz"
+@inject ProfileStore Profiles
+
+<SeoHead Title="Datenschutz" Description="Datenschutzerklärung der Website kenokoch.com." Path="/datenschutz" NoIndex="true" />
+
+<article class="legal container">
+    <span class="eyebrow">Rechtliches</span>
+    <h1 tabindex="-1">Datenschutzerklärung</h1>
+    <p class="legal__lead">
+        Diese Website kommt ohne Tracking-Cookies, ohne Werbung und ohne Inhalte von Drittanbietern aus.
+        Hier steht, welche Daten trotzdem anfallen – und warum.
+    </p>
+
+    <section>
+        <h2>1. Verantwortlicher</h2>
+        <p>
+            @Profiles.Profile.Name<br />
+            [Straße Hausnummer], [PLZ Ort]<br />
+            E-Mail: <a href="@($"mailto:{Profiles.Profile.Email}")">@Profiles.Profile.Email</a>
+        </p>
+    </section>
+
+    <section>
+        <h2>2. Hosting bei Microsoft Azure</h2>
+        <p>
+            Die Website wird bei Microsoft Azure betrieben (Microsoft Ireland Operations Limited, One Microsoft Place,
+            South County Business Park, Leopardstown, Dublin 18, Irland), Rechenzentrumsregion Westeuropa.
+            Beim Aufruf der Seite verarbeitet der Server technisch notwendige Daten wie IP-Adresse, Zeitpunkt,
+            aufgerufene Adresse und Browserkennung, um die Seite auszuliefern und den sicheren Betrieb zu gewährleisten.
+            Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem stabilen, sicheren Betrieb).
+            Mit Microsoft besteht ein Vertrag zur Auftragsverarbeitung.
+        </p>
+    </section>
+
+    <section>
+        <h2>3. Technisch notwendige Verbindungen und Cookies</h2>
+        <p>
+            Interaktive Bereiche nutzen eine WebSocket-Verbindung (Blazor/SignalR). Dabei können technisch notwendige
+            Cookies gesetzt werden: ein Cookie zur Lastverteilung von Azure App Service (<code>ARRAffinity</code>)
+            und ein Schutz-Cookie gegen Cross-Site-Request-Forgery bei Formularen. Wenn Sie das Farbschema umschalten,
+            wird Ihre Wahl in einem Cookie (<code>theme</code>) gespeichert. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG
+            in Verbindung mit Art. 6 Abs. 1 lit. f DSGVO.
+        </p>
+    </section>
+
+    <section>
+        <h2>4. Besucherstatistik ohne Personenbezug</h2>
+        <p>
+            Die Website zählt Seitenaufrufe als Tagessummen pro Seite (z. B. „42 Aufrufe von /demos am 24.10.“) und
+            die Anzahl gerade geöffneter Verbindungen. Dabei werden weder Cookies gesetzt noch IP-Adressen oder
+            individuelle Besuche gespeichert. Ein Rückschluss auf einzelne Personen ist nicht möglich.
+        </p>
+    </section>
+
+    <section>
+        <h2>5. Gästebuch</h2>
+        <p>
+            Wenn Sie einen Eintrag schreiben, speichere ich Ihren Namen, optional Ihr Unternehmen, die gewählte Rolle,
+            Ihre Nachricht und den Zeitpunkt in einer Azure-SQL-Datenbank. Der Eintrag wird nach Prüfung öffentlich angezeigt.
+            Rechtsgrundlage ist Ihre Einwilligung nach Art. 6 Abs. 1 lit. a DSGVO, die Sie jederzeit per E-Mail widerrufen
+            können – der Eintrag wird dann gelöscht. Zum Schutz vor Spam wird Ihre IP-Adresse ausschließlich im Arbeitsspeicher
+            und nur als nicht umkehrbarer Hashwert für eine Begrenzung der Einträge pro Stunde verwendet und nicht gespeichert.
+        </p>
+    </section>
+
+    <section>
+        <h2>6. Application Insights</h2>
+        <p>
+            Zur Fehleranalyse und Leistungsüberwachung nutze ich Azure Application Insights (Microsoft). Erfasst werden
+            serverseitig Anfragen, Antwortzeiten, Fehler und technische Protokolle. IP-Adressen werden von Application Insights
+            standardmäßig nicht gespeichert. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; die Daten werden nach
+            spätestens 90 Tagen gelöscht.
+        </p>
+    </section>
+
+    <section>
+        <h2>7. Schriftarten und externe Inhalte</h2>
+        <p>
+            Alle Schriftarten, Skripte und Icons werden von diesem Server ausgeliefert. Es werden keine Inhalte von
+            Google Fonts, Content-Delivery-Networks oder sozialen Netzwerken nachgeladen.
+        </p>
+    </section>
+
+    <section>
+        <h2>8. Ihre Rechte</h2>
+        <p>
+            Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit
+            sowie auf Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen. Außerdem können Sie sich bei
+            einer Datenschutz-Aufsichtsbehörde beschweren. Eine formlose E-Mail an mich genügt.
+        </p>
+    </section>
+
+    <p class="legal__updated">Stand: Oktober 2026</p>
+</article>

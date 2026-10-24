@@ -1,0 +1,88 @@
+@* Azure-Topologie der Website: vom Browser über App Service bis Azure SQL, Monitoring und CI/CD. *@
+<figure class="diagram diagram--azure">
+    <svg viewBox="0 0 980 520" role="img" aria-labelledby="azure-diagram-title azure-diagram-desc">
+        <title id="azure-diagram-title">Azure-Architektur von KenoKoch.com</title>
+        <desc id="azure-diagram-desc">Der Browser ruft kenokoch.com über HTTPS auf. Azure App Service (Linux, .NET 10) liefert statisches HTML, hält SignalR-Verbindungen und stellt die WebAssembly-Dateien bereit. Die Anwendung verbindet sich per Managed Identity mit Azure SQL Database (Serverless) und sendet Telemetrie an Application Insights. GitHub Actions baut, testet und deployt per OpenID Connect; die Infrastruktur wird mit Bicep beschrieben.</desc>
+        <defs>
+            <marker id="az-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" class="diagram__arrowhead" />
+            </marker>
+            <marker id="az-arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" class="diagram__arrowhead diagram__arrowhead--accent" />
+            </marker>
+        </defs>
+
+        @* Ressourcengruppe *@
+        <rect x="230" y="104" width="730" height="396" rx="22" class="diagram__group" />
+        <text x="254" y="132" class="diagram__group-label">Azure · Ressourcengruppe rg-kenokoch · Region West Europe</text>
+
+        @* Browser *@
+        <rect x="20" y="230" width="170" height="120" rx="16" class="diagram__box" />
+        <text x="105" y="270" class="diagram__title" text-anchor="middle">Browser</text>
+        <text x="105" y="294" class="diagram__text" text-anchor="middle">HTML · SignalR</text>
+        <text x="105" y="314" class="diagram__text" text-anchor="middle">.NET WebAssembly</text>
+
+        @* GitHub *@
+        <rect x="20" y="24" width="300" height="62" rx="14" class="diagram__box" />
+        <text x="42" y="52" class="diagram__title">GitHub Actions</text>
+        <text x="42" y="72" class="diagram__text">Build · Test · Publish · Deploy (OIDC)</text>
+
+        <rect x="360" y="24" width="250" height="62" rx="14" class="diagram__box diagram__box--base" />
+        <text x="382" y="52" class="diagram__title">Bicep</text>
+        <text x="382" y="72" class="diagram__text">Infrastruktur als Code</text>
+
+        @* App Service *@
+        <rect x="270" y="160" width="390" height="250" rx="18" class="diagram__box diagram__box--host" />
+        <text x="294" y="192" class="diagram__title">Azure App Service</text>
+        <text x="294" y="214" class="diagram__text">Linux · .NET 10 · HTTPS · Managed Certificate</text>
+
+        <rect x="294" y="234" width="166" height="70" rx="12" class="diagram__chip" />
+        <text x="377" y="263" class="diagram__chip-title" text-anchor="middle">Static SSR</text>
+        <text x="377" y="284" class="diagram__text" text-anchor="middle">HTML pro Request</text>
+
+        <rect x="472" y="234" width="166" height="70" rx="12" class="diagram__chip" />
+        <text x="555" y="263" class="diagram__chip-title" text-anchor="middle">Blazor Server</text>
+        <text x="555" y="284" class="diagram__text" text-anchor="middle">SignalR · WebSockets</text>
+
+        <rect x="294" y="316" width="166" height="70" rx="12" class="diagram__chip" />
+        <text x="377" y="345" class="diagram__chip-title" text-anchor="middle">Minimal APIs</text>
+        <text x="377" y="366" class="diagram__text" text-anchor="middle">OpenAPI · Health</text>
+
+        <rect x="472" y="316" width="166" height="70" rx="12" class="diagram__chip" />
+        <text x="555" y="345" class="diagram__chip-title" text-anchor="middle">4 Module</text>
+        <text x="555" y="366" class="diagram__text" text-anchor="middle">modularer Monolith</text>
+
+        @* Azure SQL *@
+        <g class="diagram__db">
+            <path d="M740,214 v120 a80,20 0 0 0 160,0 v-120" class="diagram__box diagram__box--db" />
+            <ellipse cx="820" cy="214" rx="80" ry="20" class="diagram__box diagram__box--db-top" />
+        </g>
+        <text x="820" y="268" class="diagram__title" text-anchor="middle">Azure SQL</text>
+        <text x="820" y="290" class="diagram__text" text-anchor="middle">Serverless · Free Offer</text>
+        <text x="820" y="312" class="diagram__text diagram__text--mono" text-anchor="middle">[guestbook] [analytics]</text>
+
+        @* Application Insights *@
+        <rect x="700" y="404" width="240" height="70" rx="14" class="diagram__box" />
+        <text x="722" y="434" class="diagram__title">Application Insights</text>
+        <text x="722" y="456" class="diagram__text">Log Analytics · OpenTelemetry</text>
+
+        @* Kanten *@
+        <path d="M190,290 H262" class="diagram__edge diagram__edge--accent" marker-end="url(#az-arrow-accent)" />
+        <rect x="186" y="246" width="84" height="22" rx="11" class="diagram__label-bg" />
+        <text x="228" y="261" class="diagram__label" text-anchor="middle">HTTPS / WSS</text>
+
+        <path d="M170,86 V150 H330 V156" class="diagram__edge" marker-end="url(#az-arrow)" />
+        <path d="M485,86 V98" class="diagram__edge" marker-end="url(#az-arrow)" />
+
+        <path d="M660,274 H732" class="diagram__edge diagram__edge--accent" marker-end="url(#az-arrow-accent)" />
+        <rect x="652" y="236" width="88" height="34" rx="10" class="diagram__label-bg" />
+        <text x="696" y="250" class="diagram__label" text-anchor="middle">Managed</text>
+        <text x="696" y="264" class="diagram__label" text-anchor="middle">Identity</text>
+
+        <path d="M600,410 V439 H692" class="diagram__edge" marker-end="url(#az-arrow)" />
+        <text x="612" y="460" class="diagram__label diagram__label--plain">Telemetrie</text>
+
+        <text x="70" y="400" class="diagram__caption">kenokoch.com</text>
+        <text x="70" y="418" class="diagram__caption">DNS → App Service</text>
+    </svg>
+</figure>

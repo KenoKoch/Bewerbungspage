@@ -1,0 +1,189 @@
+@using System.Globalization
+@using System.Text
+@* Trend wie die Trace-Funktion im TIA Portal: Analogwert oben, Digitalsignale in eigenen Spuren darunter (kein zweites y-Achsen-Paar). *@
+<figure class="trend">
+    <figcaption class="trend__head">
+        <span class="trend__title">Trend · letzte 60 Sekunden</span>
+        <ul class="trend__legend">
+            <li><span class="trend__key trend__key--level"></span>Füllstand LT101</li>
+            <li><span class="trend__key trend__key--pump"></span>Pumpe P1 · %Q0.0</li>
+            <li><span class="trend__key trend__key--valve"></span>Ventil V1 · %Q0.1</li>
+        </ul>
+    </figcaption>
+
+    <div class="trend__plot"
+         data-trend-plot
+         data-samples="@_samplesJson"
+         data-left="@Inv(Left)"
+         data-right="@Inv(Right)"
+         data-width="@Inv(W)"
+         data-window="@Inv(WindowSeconds)">
+        <svg class="trend__svg" viewBox="0 0 @Inv(W) @Inv(H)" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            @foreach (var grid in new[] { 0d, 50d, 100d })
+            {
+                <line class="trend__grid" x1="@Inv(Left)" x2="@Inv(W - Right)" y1="@Inv(LevelY(grid))" y2="@Inv(LevelY(grid))" />
+            }
+            @foreach (var threshold in Thresholds)
+            {
+                <line class="trend__threshold trend__threshold--@threshold.Kind" x1="@Inv(Left)" x2="@Inv(W - Right)" y1="@Inv(LevelY(threshold.Value))" y2="@Inv(LevelY(threshold.Value))" />
+            }
+            <line class="trend__grid" x1="@Inv(Left)" x2="@Inv(W - Right)" y1="@Inv(PumpLow)" y2="@Inv(PumpLow)" />
+            <line class="trend__grid" x1="@Inv(Left)" x2="@Inv(W - Right)" y1="@Inv(ValveLow)" y2="@Inv(ValveLow)" />
+
+            @if (_levelPoints.Length > 0)
+            {
+                <polygon class="trend__area" points="@_areaPoints" />
+                <polyline class="trend__line trend__line--level" points="@_levelPoints" />
+                <path class="trend__line trend__line--pump" d="@_pumpPath" />
+                <path class="trend__line trend__line--valve" d="@_valvePath" />
+            }
+        </svg>
+
+        <div class="trend__labels" aria-hidden="true">
+            <span class="trend__ylabel" style="top:@Pct(LevelY(100), H)">100 %</span>
+            <span class="trend__ylabel" style="top:@Pct(LevelY(50), H)">50 %</span>
+            <span class="trend__ylabel" style="top:@Pct(LevelY(0), H)">0 %</span>
+            <span class="trend__ylabel trend__ylabel--lane" style="top:@Pct((PumpHigh + PumpLow) / 2, H)">P1</span>
+            <span class="trend__ylabel trend__ylabel--lane" style="top:@Pct((ValveHigh + ValveLow) / 2, H)">V1</span>
+            @foreach (var threshold in Thresholds)
+            {
+                <span class="trend__tlabel trend__tlabel--@threshold.Kind" style="top:@Pct(LevelY(threshold.Value), H)">@threshold.Label</span>
+            }
+        </div>
+
+        @if (_levelPoints.Length == 0)
+        {
+            <p class="trend__empty">Der Trend startet, sobald die CPU läuft.</p>
+        }
+
+        @* Wird von site.js befüllt (Fadenkreuz + Tooltip) – Blazor rendert hier bewusst keine Kinder. *@
+        <div class="trend__overlay"></div>
+    </div>
+
+    <div class="trend__xaxis" aria-hidden="true">
+        <span>−60 s</span><span>−45 s</span><span>−30 s</span><span>−15 s</span><span>jetzt</span>
+    </div>
+
+    <details class="trend__table">
+        <summary>Letzte Werte als Tabelle</summary>
+        <table class="data-table data-table--compact">
+            <thead>
+                <tr><th scope="col">Zeit</th><th scope="col" class="num">Füllstand</th><th scope="col">Pumpe P1</th><th scope="col">Ventil V1</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var sample in Samples.TakeLast(8).Reverse())
+                {
+                    <tr>
+                        <td>vor @Fmt.Number(Math.Max(0, Now - sample.Seconds), 1) s</td>
+                        <td class="num">@Fmt.Number(sample.Level, 1) %</td>
+                        <td>@(sample.Pump ? "EIN" : "AUS")</td>
+                        <td>@(sample.Valve ? "AUF" : "ZU")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </details>
+</figure>
+
+@code {
+    private const double W = 600;
+    private const double H = 200;
+    private const double Left = 40;
+    private const double Right = 48;
+    private const double LevelTop = 10;
+    private const double LevelBottom = 126;
+    private const double PumpHigh = 144;
+    private const double PumpLow = 160;
+    private const double ValveHigh = 176;
+    private const double ValveLow = 192;
+    private const double WindowSeconds = 60;
+
+    private static readonly (double Value, string Label, string Kind)[] Thresholds =
+    [
+        (95, "HH", "danger"),
+        (80, "H", "info"),
+        (20, "L", "info"),
+        (8, "TL", "warn"),
+    ];
+
+    private string _levelPoints = string.Empty;
+    private string _areaPoints = string.Empty;
+    private string _pumpPath = string.Empty;
+    private string _valvePath = string.Empty;
+    private string _samplesJson = "[]";
+    private IReadOnlyList<TrendSample>? _renderedSamples;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TrendSample> Samples { get; set; } = [];
+
+    /// <summary>Aktuelle Simulationszeit in Sekunden (rechter Rand des Trends).</summary>
+    [Parameter]
+    public double Now { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_renderedSamples, Samples))
+        {
+            return;
+        }
+
+        _renderedSamples = Samples;
+        if (Samples.Count == 0)
+        {
+            _levelPoints = _areaPoints = _pumpPath = _valvePath = string.Empty;
+            _samplesJson = "[]";
+            return;
+        }
+
+        var end = Samples[^1].Seconds;
+        var start = end - WindowSeconds;
+        double X(double t) => Left + (t - start) / WindowSeconds * (W - Left - Right);
+
+        var visible = Samples.Where(s => s.Seconds >= start).ToArray();
+        var level = new StringBuilder();
+        var pump = new StringBuilder();
+        var valve = new StringBuilder();
+        var json = new StringBuilder("[");
+
+        for (var i = 0; i < visible.Length; i++)
+        {
+            var sample = visible[i];
+            var x = X(sample.Seconds);
+            level.Append(Inv(x)).Append(',').Append(Inv(LevelY(sample.Level))).Append(' ');
+            AppendStep(pump, i, x, sample.Pump ? PumpHigh : PumpLow);
+            AppendStep(valve, i, x, sample.Valve ? ValveHigh : ValveLow);
+
+            if (i > 0)
+            {
+                json.Append(',');
+            }
+
+            json.Append('[').Append(Inv(sample.Seconds - end)).Append(',').Append(sample.Level.ToString("0.0", CultureInfo.InvariantCulture))
+                .Append(',').Append(sample.Pump ? 1 : 0).Append(',').Append(sample.Valve ? 1 : 0).Append(']');
+        }
+
+        _levelPoints = level.ToString().TrimEnd();
+        _areaPoints = $"{Inv(X(visible[0].Seconds))},{Inv(LevelBottom)} {_levelPoints} {Inv(X(visible[^1].Seconds))},{Inv(LevelBottom)}";
+        _pumpPath = pump.ToString();
+        _valvePath = valve.ToString();
+        _samplesJson = json.Append(']').ToString();
+    }
+
+    private static void AppendStep(StringBuilder path, int index, double x, double y)
+    {
+        if (index == 0)
+        {
+            path.Append('M').Append(Inv(x)).Append(',').Append(Inv(y));
+        }
+        else
+        {
+            path.Append(" H").Append(Inv(x)).Append(" V").Append(Inv(y));
+        }
+    }
+
+    private static double LevelY(double percent) => LevelTop + (1 - percent / 100) * (LevelBottom - LevelTop);
+
+    private static string Inv(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+
+    private static string Pct(double value, double total) => (value / total * 100).ToString("0.##", CultureInfo.InvariantCulture) + "%";
+}

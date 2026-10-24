@@ -1,0 +1,859 @@
+.plc {
+    display: grid;
+    gap: 1.25rem;
+    /* Trendfarben: Kategorien 1–3 der validierten Dark-Palette (HMI ist immer dunkel). */
+    --hmi-series-1: #3987e5;
+    --hmi-series-2: #d95926;
+    --hmi-series-3: #199e70;
+}
+
+.plc__layout {
+    display: grid;
+    grid-template-columns: 272px minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.plc__side {
+    display: grid;
+    gap: 1rem;
+}
+
+/* ── CPU-Baugruppe ─────────────────────────────────────────── */
+.cpu {
+    display: grid;
+    gap: .85rem;
+    padding: 1rem;
+    border-radius: 16px;
+    color: #d1d5db;
+    background: linear-gradient(180deg, #2b313b 0%, #1b1f26 100%);
+    border: 1px solid #3a414d;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 18px 40px -24px rgba(0, 0, 0, .7);
+}
+
+.cpu__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--font-mono);
+}
+
+.cpu__brand {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    color: #2dd4bf;
+}
+
+.cpu__model {
+    font-size: .68rem;
+    color: #9ca3af;
+}
+
+.cpu__body {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: .9rem;
+}
+
+.cpu__leds {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: .45rem;
+    font-family: var(--font-mono);
+    font-size: .64rem;
+    color: #9ca3af;
+}
+
+.cpu__leds li {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+}
+
+.led {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #3f4652;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .6);
+    transition: background .2s, box-shadow .2s;
+}
+
+.led--green {
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+}
+
+.led--amber {
+    background: #f59e0b;
+    box-shadow: 0 0 8px #f59e0b;
+}
+
+.led--red {
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444;
+}
+
+.led--blink {
+    animation: plc-blink 1s steps(2, jump-none) infinite;
+}
+
+.cpu__display {
+    display: grid;
+    gap: .12rem;
+    align-content: center;
+    padding: .55rem .7rem;
+    border-radius: 8px;
+    background: #071016;
+    border: 1px solid #0f1b24;
+    box-shadow: inset 0 0 12px rgba(0, 0, 0, .6);
+    font-family: var(--font-mono);
+    font-size: .7rem;
+    color: #99f6e4;
+    min-width: 0;
+}
+
+.cpu__display span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cpu__display-mode {
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: .1em;
+}
+
+.cpu__switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .35rem;
+    padding: .3rem;
+    border-radius: 10px;
+    background: #111418;
+    border: 1px solid #2d333c;
+}
+
+.cpu__switch button {
+    border: 0;
+    border-radius: 7px;
+    padding: .55rem;
+    font: 700 .78rem var(--font-mono);
+    letter-spacing: .1em;
+    color: #9ca3af;
+    background: transparent;
+    cursor: pointer;
+    transition: background .2s, color .2s, box-shadow .2s;
+}
+
+.cpu__switch button:hover:not(:disabled):not(.is-active) {
+    color: #e5e7eb;
+    background: #1f242c;
+}
+
+.cpu__switch button.is-active:first-child {
+    color: #fff;
+    background: #16a34a;
+    box-shadow: 0 0 18px -4px #22c55e;
+}
+
+.cpu__switch button.is-active:last-child {
+    color: #fff;
+    background: #b45309;
+}
+
+.cpu__switch button:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+.cpu__hint {
+    margin: 0;
+    font-size: .72rem;
+    color: #fbbf24;
+}
+
+/* ── Feldgeräte & Aufgaben ─────────────────────────────────── */
+.side-card {
+    display: grid;
+    gap: .95rem;
+    padding: 1rem;
+    border-radius: 16px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+}
+
+.side-card__title {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    margin: 0;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.estop {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: .9rem;
+    align-items: center;
+}
+
+.estop__button {
+    width: 64px;
+    height: 64px;
+    border: 0;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    background: linear-gradient(180deg, #fde047, #eab308);
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .25), 0 8px 18px -10px rgba(0, 0, 0, .6);
+}
+
+.estop__button:disabled {
+    cursor: not-allowed;
+    filter: saturate(.6);
+}
+
+.estop__cap {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ff7a7a, #dc2626 55%, #991b1b);
+    box-shadow: 0 6px 0 #7f1d1d, 0 10px 16px rgba(0, 0, 0, .45);
+    transform: translateY(-4px);
+    transition: transform .12s, box-shadow .12s;
+}
+
+.estop__button.is-pressed .estop__cap {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 #7f1d1d, 0 2px 6px rgba(0, 0, 0, .4);
+}
+
+.estop__text strong {
+    display: block;
+    font-size: .9rem;
+}
+
+.estop__text span {
+    font-size: .75rem;
+    color: var(--text-muted);
+}
+
+.side-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+}
+
+.side-row--stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .5rem;
+}
+
+.side-row__text {
+    display: grid;
+    gap: .1rem;
+}
+
+.side-row__text strong {
+    font-size: .85rem;
+}
+
+.side-row__text span {
+    font-size: .75rem;
+    color: var(--text-muted);
+}
+
+.toggle {
+    position: relative;
+    flex: none;
+    width: 46px;
+    height: 26px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-2);
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+}
+
+.toggle__thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: transform .2s, background .2s;
+}
+
+.toggle.is-on .toggle__thumb {
+    transform: translateX(20px);
+    background: #fff;
+}
+
+.toggle--danger.is-on {
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
+.toggle:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+.range {
+    width: 100%;
+    accent-color: var(--plc);
+}
+
+.mission ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: .55rem;
+}
+
+.mission li {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: .55rem;
+    align-items: start;
+    font-size: .8rem;
+    color: var(--text-muted);
+    transition: color .3s;
+}
+
+.mission__check {
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border-strong);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    transition: background .3s, border-color .3s;
+}
+
+.mission li.is-done {
+    color: var(--text);
+}
+
+.mission li.is-done .mission__check {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+/* ── HMI-Panel ─────────────────────────────────────────────── */
+.hmi {
+    padding: 10px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #252c38, #151a22);
+    border: 1px solid #333c4a;
+    box-shadow: 0 30px 70px -35px rgba(0, 0, 0, .85), inset 0 1px 0 rgba(255, 255, 255, .06);
+    color: #cbd5e1;
+}
+
+.hmi__display {
+    border-radius: 13px;
+    overflow: hidden;
+    background: #0b1018;
+    border: 1px solid #070b11;
+}
+
+.hmi__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .45rem .7rem;
+    padding: .55rem .85rem;
+    background: #111827;
+    border-bottom: 1px solid #1f2937;
+    font-family: var(--font-mono);
+    font-size: .7rem;
+}
+
+.hmi__title {
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: #f1f5f9;
+}
+
+.hmi__chip {
+    padding: .1rem .5rem;
+    border-radius: 6px;
+    font-weight: 700;
+    letter-spacing: .08em;
+}
+
+.hmi__chip--auto {
+    color: #93c5fd;
+    background: rgba(59, 130, 246, .16);
+    border: 1px solid rgba(59, 130, 246, .45);
+}
+
+.hmi__chip--hand {
+    color: #fcd34d;
+    background: rgba(245, 158, 11, .14);
+    border: 1px solid rgba(245, 158, 11, .45);
+}
+
+.hmi__lamp {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: #64748b;
+}
+
+.hmi__lamp span {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #334155;
+}
+
+.hmi__lamp.is-on {
+    color: #e2e8f0;
+}
+
+.hmi__lamp--green.is-on span {
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+}
+
+.hmi__lamp--red.is-on span {
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444;
+    animation: plc-blink 1s steps(2, jump-none) infinite;
+}
+
+.hmi__horn {
+    display: inline-flex;
+    color: #475569;
+}
+
+.hmi__horn.is-on {
+    color: #fbbf24;
+    animation: plc-shake .3s linear infinite;
+}
+
+.hmi__spacer {
+    flex: 1;
+}
+
+.hmi__meta {
+    color: #64748b;
+}
+
+.hmi__clock {
+    color: #e2e8f0;
+}
+
+.hmi__screen {
+    position: relative;
+    padding: .4rem .6rem 0;
+    background: radial-gradient(ellipse at 50% 0%, #0f1b2d 0%, #0b1018 70%);
+}
+
+.hmi__overlay {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: .75rem;
+    padding: 2rem;
+    text-align: center;
+    color: #e2e8f0;
+    font-size: .9rem;
+    background: rgba(5, 8, 14, .72);
+    backdrop-filter: blur(2px);
+}
+
+.hmi__overlay p {
+    margin: 0;
+    max-width: 38ch;
+}
+
+.hmi__hint {
+    position: absolute;
+    left: 50%;
+    top: 12px;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    max-width: calc(100% - 24px);
+    padding: .35rem .8rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, .92);
+    border: 1px solid #334155;
+    color: #e2e8f0;
+    font-size: .75rem;
+    box-shadow: 0 8px 20px -10px #000;
+    animation: plc-hint 2.4s ease-in-out infinite;
+}
+
+.hmi__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem 1.25rem;
+    padding: .85rem .9rem;
+    border-top: 1px solid #1f2937;
+    background: #0e141e;
+}
+
+.hmi__group {
+    display: grid;
+    gap: .35rem;
+    align-content: start;
+}
+
+.hmi__group-label {
+    font-family: var(--font-mono);
+    font-size: .6rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.hmi__buttons {
+    display: flex;
+    gap: .4rem;
+}
+
+.hmi-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    height: 34px;
+    padding: 0 .85rem;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: linear-gradient(#1e293b, #172033);
+    color: #e2e8f0;
+    font: 600 .74rem var(--font-mono);
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: transform .08s, border-color .2s, box-shadow .2s;
+}
+
+.hmi-btn:hover:not(:disabled) {
+    border-color: #64748b;
+}
+
+.hmi-btn:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.hmi-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.hmi-btn--start {
+    border-color: #166534;
+    background: linear-gradient(#16a34a, #166534);
+}
+
+.hmi-btn--stop {
+    border-color: #991b1b;
+    background: linear-gradient(#dc2626, #991b1b);
+}
+
+.hmi-btn--ack {
+    border-color: #a16207;
+    background: linear-gradient(#ca8a04, #854d0e);
+}
+
+.hmi-btn--ack.is-attention {
+    animation: plc-attention 1.2s ease-in-out infinite;
+}
+
+.hmi-btn.is-on {
+    border-color: #22c55e;
+    color: #bbf7d0;
+    box-shadow: inset 0 0 0 1px #22c55e;
+}
+
+.hmi-seg {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 9px;
+    background: #0b1018;
+    border: 1px solid #334155;
+}
+
+.hmi-seg button {
+    height: 28px;
+    padding: 0 .8rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #94a3b8;
+    font: 700 .72rem var(--font-mono);
+    letter-spacing: .08em;
+    cursor: pointer;
+}
+
+.hmi-seg button.is-active {
+    color: #fff;
+    background: #1d4ed8;
+}
+
+.hmi-seg button:last-child.is-active {
+    background: #b45309;
+}
+
+.hmi-seg button:disabled {
+    cursor: not-allowed;
+}
+
+.hmi__alarms {
+    display: grid;
+    gap: 1px;
+    background: #1f2937;
+    border-top: 1px solid #1f2937;
+}
+
+.hmi-alarm {
+    display: grid;
+    grid-template-columns: 44px 64px 34px minmax(0, 1fr);
+    gap: .6rem;
+    align-items: center;
+    padding: .45rem .85rem;
+    font-family: var(--font-mono);
+    font-size: .7rem;
+    background: #0b1018;
+    color: #cbd5e1;
+}
+
+.hmi-alarm--ok {
+    display: flex;
+    gap: .5rem;
+    color: #86efac;
+}
+
+.hmi-alarm--fault {
+    background: #3b0d0d;
+    color: #fecaca;
+}
+
+.hmi-alarm--fault.is-unacknowledged {
+    animation: plc-alarm 1s steps(2, jump-none) infinite;
+}
+
+.hmi-alarm--warning {
+    background: #352707;
+    color: #fde68a;
+}
+
+.hmi-alarm--system {
+    background: #111827;
+    color: #94a3b8;
+}
+
+.hmi-alarm.is-gone {
+    opacity: .75;
+}
+
+.hmi-alarm__state {
+    font-weight: 700;
+}
+
+.hmi-alarm__text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hmi__trend {
+    padding: .85rem .9rem 1rem;
+    border-top: 1px solid #1f2937;
+}
+
+/* ── Detail-Reiter ─────────────────────────────────────────── */
+.plc-tabs {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--bg-elev);
+    overflow: hidden;
+}
+
+.plc-tabs__list {
+    display: flex;
+    gap: .25rem;
+    padding: .5rem;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.plc-tabs__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem .85rem;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: .85rem;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.plc-tabs__tab:hover {
+    color: var(--text);
+    background: var(--surface);
+}
+
+.plc-tabs__tab.is-active {
+    color: var(--text);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.plc-tabs__panel {
+    display: grid;
+    gap: 1rem;
+    padding: 1.25rem;
+}
+
+.io {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    gap: 1.25rem;
+}
+
+.plc-note {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    margin: 0;
+    font-size: .8rem;
+    color: var(--text-muted);
+}
+
+.plc-empty {
+    margin: 0;
+    font-size: .9rem;
+    color: var(--text-muted);
+}
+
+.how {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 1rem;
+}
+
+.how__item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: .85rem;
+    align-items: start;
+    padding: 1rem;
+    border-radius: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.how__item h5 {
+    margin: 0 0 .3rem;
+    font-size: .95rem;
+}
+
+.how__item p {
+    margin: 0;
+    font-size: .85rem;
+    color: var(--text-muted);
+}
+
+@keyframes plc-blink {
+    50% {
+        opacity: .25;
+    }
+}
+
+@keyframes plc-alarm {
+    50% {
+        background: #7f1d1d;
+    }
+}
+
+@keyframes plc-shake {
+    25% {
+        transform: rotate(-12deg);
+    }
+
+    75% {
+        transform: rotate(12deg);
+    }
+}
+
+@keyframes plc-attention {
+    50% {
+        box-shadow: 0 0 0 4px rgba(234, 179, 8, .35);
+    }
+}
+
+@keyframes plc-hint {
+    50% {
+        border-color: #64748b;
+    }
+}
+
+@media (max-width: 1100px) {
+    .plc__layout {
+        grid-template-columns: 1fr;
+    }
+
+    .plc__side {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .hmi {
+        padding: 6px;
+        border-radius: 16px;
+    }
+
+    .hmi__controls {
+        gap: .7rem;
+    }
+
+    .hmi-alarm {
+        grid-template-columns: 40px 58px 30px minmax(0, 1fr);
+        gap: .4rem;
+        padding: .45rem .6rem;
+    }
+
+    .hmi__hint {
+        white-space: normal;
+        text-align: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .led--blink,
+    .hmi__lamp--red.is-on span,
+    .hmi__horn.is-on,
+    .hmi-btn--ack.is-attention,
+    .hmi-alarm--fault.is-unacknowledged,
+    .hmi__hint {
+        animation: none;
+    }
+}

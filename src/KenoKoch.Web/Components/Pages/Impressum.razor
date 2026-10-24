@@ -1,0 +1,46 @@
+@page "/impressum"
+@inject ProfileStore Profiles
+
+<SeoHead Title="Impressum" Description="Impressum der Website kenokoch.com." Path="/impressum" NoIndex="true" />
+
+<article class="legal container">
+    <span class="eyebrow">Rechtliches</span>
+    <h1 tabindex="-1">Impressum</h1>
+
+    <section>
+        <h2>Angaben gemäß § 5 DDG</h2>
+        <p>
+            @Profiles.Profile.Name<br />
+            [Straße Hausnummer]<br />
+            [PLZ Ort]<br />
+            Deutschland
+        </p>
+    </section>
+
+    <section>
+        <h2>Kontakt</h2>
+        <p>E-Mail: <a href="@($"mailto:{Profiles.Profile.Email}")">@Profiles.Profile.Email</a></p>
+    </section>
+
+    <section>
+        <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
+        <p>@Profiles.Profile.Name, Anschrift wie oben.</p>
+    </section>
+
+    <section>
+        <h2>Haftung für Links</h2>
+        <p>
+            Diese Website enthält Links zu externen Websites Dritter, auf deren Inhalte ich keinen Einfluss habe.
+            Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber verantwortlich.
+            Bei Bekanntwerden von Rechtsverletzungen werde ich derartige Links umgehend entfernen.
+        </p>
+    </section>
+
+    <section>
+        <h2>Gästebuch</h2>
+        <p>
+            Für Einträge im Gästebuch sind die jeweiligen Verfasser verantwortlich. Einträge werden vor der Veröffentlichung geprüft;
+            rechtswidrige Inhalte entferne ich, sobald ich davon Kenntnis erhalte.
+        </p>
+    </section>
+</article>

@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/KenoKoch.BuildingBlocks/KenoKoch.BuildingBlocks.csproj" />
+    <Project Path="src/KenoKoch.UI/KenoKoch.UI.csproj" />
+    <Project Path="src/KenoKoch.Web.Client/KenoKoch.Web.Client.csproj" />
+    <Project Path="src/KenoKoch.Web/KenoKoch.Web.csproj" />
+    <Project Path="src/Modules/Analytics/KenoKoch.Modules.Analytics/KenoKoch.Modules.Analytics.csproj" />
+    <Project Path="src/Modules/Guestbook/KenoKoch.Modules.Guestbook.Contracts/KenoKoch.Modules.Guestbook.Contracts.csproj" />
+    <Project Path="src/Modules/Guestbook/KenoKoch.Modules.Guestbook/KenoKoch.Modules.Guestbook.csproj" />
+    <Project Path="src/Modules/Plc/KenoKoch.Modules.Plc.Contracts/KenoKoch.Modules.Plc.Contracts.csproj" />
+    <Project Path="src/Modules/Plc/KenoKoch.Modules.Plc/KenoKoch.Modules.Plc.csproj" />
+    <Project Path="src/Modules/Profile/KenoKoch.Modules.Profile/KenoKoch.Modules.Profile.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+</Solution>

@@ -1,0 +1,40 @@
+@* Hinweis, wenn die Datenbank (noch) nicht bereit ist – z. B. weil Azure SQL Serverless gerade aufwacht. *@
+<div class="db-notice db-notice--@Status.ToLowerInvariant()" role="status">
+    <span class="db-notice__icon" aria-hidden="true">
+        @if (Status == "Initializing")
+        {
+            <span class="spinner"></span>
+        }
+        else
+        {
+            <Icon Name="database" Size="18" />
+        }
+    </span>
+    <div>
+        <strong>@Title</strong>
+        <p>@Text</p>
+    </div>
+</div>
+
+@code {
+    /// <summary>Name des DatabaseStatus (NotConfigured, Initializing, Ready, Unavailable).</summary>
+    [Parameter]
+    public string Status { get; set; } = "Initializing";
+
+    [Parameter]
+    public string? Message { get; set; }
+
+    private string Title => Status switch
+    {
+        "Initializing" => "Datenbank startet …",
+        "NotConfigured" => "Keine Datenbank konfiguriert",
+        _ => "Datenbank gerade nicht erreichbar",
+    };
+
+    private string Text => Status switch
+    {
+        "Initializing" => "Azure SQL Serverless pausiert bei Inaktivität, um Kosten zu sparen. Der erste Zugriff weckt die Datenbank – das kann bis zu einer Minute dauern.",
+        "NotConfigured" => "Die Anwendung läuft ohne SQL Server. Mit einer Verbindungszeichenfolge 'ConnectionStrings:Sql' werden die Daten gespeichert.",
+        _ => Message ?? "Ein neuer Verbindungsversuch läuft automatisch im Hintergrund.",
+    };
+}

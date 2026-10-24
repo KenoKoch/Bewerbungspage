@@ -1,0 +1,151 @@
+@using Microsoft.Extensions.Logging
+@implements IDisposable
+@inject PresenceTracker Presence
+@inject StatsService Stats
+@inject DatabaseState Database
+@inject ILogger<LiveStatsStrip> Logger
+
+<div class="stats-strip @(_stats is null && _interactive && Database.IsReady ? "is-loading" : null)">
+    <article class="stat-tile">
+        <span class="stat-tile__label"><Icon Name="users" Size="16" /> Gerade online</span>
+        <span class="stat-tile__value" @key="@($"online-{Presence.OnlineCount}")">@(_interactive ? Fmt.Number(Presence.OnlineCount) : "–")</span>
+        <span class="stat-tile__meta"><span class="live-dot @(_interactive ? "is-live" : null)" aria-hidden="true"></span> Echtzeit über SignalR · Spitze heute @(_interactive ? Fmt.Number(Presence.PeakToday) : "–")</span>
+    </article>
+
+    <article class="stat-tile">
+        <span class="stat-tile__label"><Icon Name="eye" Size="16" /> Seitenaufrufe heute</span>
+        <div class="stat-tile__row">
+            <span class="stat-tile__value" @key="@($"today-{_stats?.PageViewsToday}")">@Value(_stats?.PageViewsToday)</span>
+            @if (_stats is not null)
+            {
+                <Sparkline Values="_stats.Last14Days.Select(d => (double)d.Count).ToArray()" Label="Seitenaufrufe der letzten 14 Tage" />
+            }
+        </div>
+        <span class="stat-tile__meta"><Icon Name="database" Size="13" /> Azure SQL · EF Core</span>
+    </article>
+
+    <article class="stat-tile">
+        <span class="stat-tile__label"><Icon Name="chart" Size="16" /> Seitenaufrufe gesamt</span>
+        <span class="stat-tile__value" @key="@($"total-{_stats?.TotalPageViews}")">@Value(_stats?.TotalPageViews)</span>
+        <span class="stat-tile__meta"><Icon Name="shield" Size="13" /> ohne Cookies, ohne IP-Speicherung</span>
+    </article>
+
+    <article class="stat-tile">
+        <span class="stat-tile__label"><Icon Name="cpu" Size="16" /> SPS-Simulationen gestartet</span>
+        <span class="stat-tile__value" @key="@($"plc-{_stats?.PlcStarts}")">@Value(_stats?.PlcStarts)</span>
+        <span class="stat-tile__meta"><Icon Name="zap" Size="13" /> per Integration Event gezählt</span>
+    </article>
+</div>
+
+<p class="stats-strip__footnote">
+    @if (!_interactive)
+    {
+        <span>Live-Werte werden geladen, sobald die SignalR-Verbindung steht …</span>
+    }
+    else if (!Database.IsReady)
+    {
+        <span><Icon Name="database" Size="13" /> @Database.Message</span>
+    }
+    else if (_stats is not null)
+    {
+        <span><Icon Name="database" Size="13" /> 2 Abfragen in @Fmt.Milliseconds(_stats.QueryDuration) · 30 s Cache · aktualisiert @Fmt.Time(KenoKoch.BuildingBlocks.Time.GermanTime.ToGerman(_stats.GeneratedAt))</span>
+    }
+</p>
+
+@code {
+    private VisitorStatistics? _stats;
+    private bool _interactive;
+    private bool _disposed;
+    private CancellationTokenSource? _cts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _interactive = RendererInfo.IsInteractive;
+        if (!_interactive)
+        {
+            return;
+        }
+
+        Presence.Changed += OnChanged;
+        Database.Changed += OnChanged;
+        _cts = new CancellationTokenSource();
+
+        await LoadAsync();
+        _ = RefreshLoopAsync(_cts.Token);
+    }
+
+    private async Task RefreshLoopAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                await InvokeAsync(async () =>
+                {
+                    await LoadAsync();
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Komponente wurde entfernt.
+        }
+        catch (ObjectDisposedException)
+        {
+            // Circuit wurde geschlossen.
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        if (!Database.IsReady)
+        {
+            return;
+        }
+
+        try
+        {
+            _stats = await Stats.GetAsync() ?? _stats;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Besucherstatistik konnte nicht geladen werden.");
+        }
+    }
+
+    private string Value(long? value) => value is null ? "–" : Fmt.Number(value.Value);
+
+    private void OnChanged()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (_stats is null && Database.IsReady)
+            {
+                await LoadAsync();
+            }
+
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _cts?.Cancel();
+        _cts?.Dispose();
+        Presence.Changed -= OnChanged;
+        Database.Changed -= OnChanged;
+    }
+}

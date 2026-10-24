@@ -1,0 +1,86 @@
+.gb-entry {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: .9rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+    animation: gb-in .45s cubic-bezier(.2, .8, .2, 1);
+}
+
+.gb-entry:last-child {
+    border-bottom: 0;
+}
+
+.gb-entry--pending {
+    background: linear-gradient(90deg, rgba(251, 191, 36, .07), transparent 70%);
+    border-radius: 12px;
+    padding: 1rem .75rem;
+    margin: 0 -.75rem .25rem;
+    border-bottom: 0;
+}
+
+.gb-entry__avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: .9rem;
+    color: #fff;
+    background: linear-gradient(135deg, hsl(var(--hue) 70% 55%), hsl(calc(var(--hue) + 40) 70% 45%));
+    box-shadow: 0 6px 18px -8px hsl(var(--hue) 70% 50%);
+}
+
+.gb-entry__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .35rem .6rem;
+}
+
+.gb-entry__name {
+    color: var(--text);
+}
+
+.gb-entry__company {
+    color: var(--text-muted);
+    font-size: .875rem;
+}
+
+.gb-entry__role {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .72rem;
+    padding: .1rem .5rem;
+    border-radius: 999px;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+}
+
+.gb-entry__time {
+    margin-left: auto;
+    font-size: .78rem;
+    color: var(--text-faint);
+    white-space: nowrap;
+}
+
+.gb-entry__message {
+    margin: .35rem 0 0;
+    color: var(--text-muted);
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.gb-entry .badge {
+    margin-top: .6rem;
+}
+
+@keyframes gb-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+}

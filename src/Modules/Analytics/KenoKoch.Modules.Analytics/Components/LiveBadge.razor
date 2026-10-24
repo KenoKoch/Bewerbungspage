@@ -1,0 +1,184 @@
+@implements IDisposable
+@inject PresenceTracker Presence
+@inject ActivityFeed Feed
+@inject TimeProvider Time
+
+<div class="live-badge">
+    <button type="button"
+            class="live-badge__button"
+            @onclick="Toggle"
+            aria-expanded="@(_open ? "true" : "false")"
+            aria-controls="live-popover"
+            title="Live-Besucher – Echtzeit über Blazor Server &amp; SignalR">
+        <span class="live-dot @(_interactive ? "is-live" : null)" aria-hidden="true"></span>
+        <span class="live-badge__count">@(_interactive ? Fmt.Number(Presence.OnlineCount) : "·")</span>
+        <span class="live-badge__label">online</span>
+    </button>
+
+    <div class="live-badge__bursts" aria-hidden="true">
+        @foreach (var burst in _bursts)
+        {
+            <span @key="burst.Id" class="reaction-burst" style="--drift:@(burst.Drift)px">@burst.Emoji</span>
+        }
+    </div>
+
+    @if (_open)
+    {
+        <button type="button" class="live-backdrop" aria-label="Live-Aktivität schließen" @onclick="Close"></button>
+        <div id="live-popover" class="live-popover" role="dialog" aria-label="Live-Aktivität">
+            <div class="live-popover__head">
+                <div>
+                    <strong>Live-Aktivität</strong>
+                    <span class="live-popover__sub">Echtzeit über Blazor Server · SignalR</span>
+                </div>
+                <button type="button" class="icon-btn" aria-label="Schließen" @onclick="Close"><Icon Name="x" Size="16" /></button>
+            </div>
+
+            <div class="live-popover__stats">
+                <div>
+                    <span class="live-popover__value">@Fmt.Number(Presence.OnlineCount)</span>
+                    <span class="live-popover__caption">gerade online</span>
+                </div>
+                <div>
+                    <span class="live-popover__value">@Fmt.Number(Presence.PeakToday)</span>
+                    <span class="live-popover__caption">Spitze heute</span>
+                </div>
+            </div>
+
+            <p class="live-popover__intro">
+                Jede geöffnete Seite hält eine WebSocket-Verbindung zum Server. Neue Besucher, Gästebucheinträge
+                und SPS-Starts werden sofort an alle gepusht – ohne Polling.
+            </p>
+
+            @{
+                var items = Feed.Items.Take(5).ToArray();
+            }
+            @if (items.Length == 0)
+            {
+                <p class="live-popover__empty">Noch ruhig hier – starten Sie doch die SPS-Demo.</p>
+            }
+            else
+            {
+                <ul class="live-popover__list">
+                    @foreach (var item in items)
+                    {
+                        <li @key="item.Id">
+                            <span class="live-popover__icon live-popover__icon--@item.Kind.ToString().ToLowerInvariant()">
+                                @if (item.Emoji is not null)
+                                {
+                                    <span aria-hidden="true">@item.Emoji</span>
+                                }
+                                else
+                                {
+                                    <Icon Name="@item.Icon" Size="14" />
+                                }
+                            </span>
+                            <span class="live-popover__text">@item.Text</span>
+                            <time>@Fmt.Relative(item.At, Time.GetUtcNow())</time>
+                        </li>
+                    }
+                </ul>
+            }
+
+            <a class="btn btn--secondary btn--sm btn--block" href="/demos#echtzeit" @onclick="Close">
+                Zur Echtzeit-Demo <Icon Name="arrow-right" Size="15" />
+            </a>
+        </div>
+    }
+</div>
+
+@code {
+    private sealed record Burst(long Id, string Emoji, int Drift);
+
+    private readonly List<Burst> _bursts = [];
+    private bool _interactive;
+    private bool _open;
+    private bool _disposed;
+    private Timer? _refreshTimer;
+
+    protected override void OnInitialized()
+    {
+        _interactive = RendererInfo.IsInteractive;
+        if (!_interactive)
+        {
+            return;
+        }
+
+        Presence.Changed += OnPresenceChanged;
+        Feed.Added += OnActivity;
+    }
+
+    private void Toggle()
+    {
+        _open = !_open;
+        UpdateRefreshTimer();
+    }
+
+    private void Close()
+    {
+        _open = false;
+        UpdateRefreshTimer();
+    }
+
+    private void UpdateRefreshTimer()
+    {
+        _refreshTimer?.Dispose();
+        _refreshTimer = _open
+            ? new Timer(_ => SafeRender(), null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5))
+            : null;
+    }
+
+    private void OnPresenceChanged() => SafeRender();
+
+    private void OnActivity(ActivityItem item)
+    {
+        if (item.Kind != ActivityKind.Reaction || item.Emoji is null)
+        {
+            SafeRender();
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            var burst = new Burst(item.Id, item.Emoji, Random.Shared.Next(-22, 23));
+            _bursts.Add(burst);
+            StateHasChanged();
+
+            await Task.Delay(2600);
+            _bursts.Remove(burst);
+            if (!_disposed)
+            {
+                StateHasChanged();
+            }
+        });
+    }
+
+    private void SafeRender()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _ = InvokeAsync(() =>
+        {
+            if (!_disposed)
+            {
+                StateHasChanged();
+            }
+        });
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _refreshTimer?.Dispose();
+        Presence.Changed -= OnPresenceChanged;
+        Feed.Added -= OnActivity;
+    }
+}

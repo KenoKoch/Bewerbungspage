@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <Description>Modul "SPS-Simulator": Soft-SPS mit Tankanlage, SCL-Funktionsbaustein in C# und WinCC-ähnlichem HMI.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\KenoKoch.BuildingBlocks\KenoKoch.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\..\KenoKoch.UI\KenoKoch.UI.csproj" />
+    <ProjectReference Include="..\KenoKoch.Modules.Plc.Contracts\KenoKoch.Modules.Plc.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Der echte Quelltext wird zusätzlich eingebettet und im HMI angezeigt: Was man sieht, ist was läuft. -->
+    <EmbeddedResource Include="Program\TankControlFb.cs" LogicalName="TankControlFb.cs" />
+    <EmbeddedResource Include="Program\FB_TankControl.scl" LogicalName="FB_TankControl.scl" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="KenoKoch.Tests" />
+  </ItemGroup>
+
+</Project>

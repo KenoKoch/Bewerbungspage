@@ -1,0 +1,179 @@
+@page "/architektur"
+@using KenoKoch.Modules.Guestbook
+
+<SeoHead Title="Architektur"
+         Description="Wie KenoKoch.com gebaut ist: modularer Monolith mit .NET 10 und Blazor, Azure App Service, Azure SQL Serverless mit Managed Identity, Bicep und GitHub Actions."
+         Path="/architektur" />
+
+<section class="page-hero">
+    <div class="page-hero__bg" aria-hidden="true"></div>
+    <div class="container">
+        <span class="eyebrow"><Icon Name="layers" Size="14" /> Architektur</span>
+        <h1 class="page-hero__title" tabindex="-1">So ist diese Website <span class="text-gradient">gebaut.</span></h1>
+        <p class="page-hero__lead">Ein modularer Monolith mit .NET 10 und Blazor, betrieben auf Azure App Service mit Azure SQL – beschrieben als Infrastruktur-Code und automatisch ausgeliefert. Klein genug für eine Bewerbungsseite, aufgebaut wie ein echtes Produkt.</p>
+    </div>
+</section>
+
+<section class="section section--tight">
+    <div class="container">
+        <SectionHeading Number="01" Eyebrow="Azure" Title="Die Infrastruktur" Lead="Alle Ressourcen liegen in einer Ressourcengruppe und werden per Bicep angelegt. Die App verbindet sich passwortlos per Managed Identity mit der Datenbank." />
+        <div class="diagram-card card" data-reveal>
+            <AzureDiagram />
+        </div>
+        <div class="infra-grid">
+            @foreach (var item in Infrastructure)
+            {
+                <article class="card infra-card" data-reveal>
+                    <span class="icon-tile"><Icon Name="@item.Icon" Size="20" /></span>
+                    <h3>@item.Title</h3>
+                    <p>@item.Text</p>
+                </article>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="section section--alt">
+    <div class="container">
+        <SectionHeading Number="02" Eyebrow="Request-Lebenszyklus" Title="Was passiert, wenn Sie diese Seite öffnen?" />
+        <ol class="flow" data-reveal>
+            @foreach (var (step, index) in Flow.Select((s, i) => (s, i)))
+            {
+                <li class="flow__step">
+                    <span class="flow__number">@(index + 1)</span>
+                    <div>
+                        <h3>@step.Title</h3>
+                        <p>@step.Text</p>
+                    </div>
+                </li>
+            }
+        </ol>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <SectionHeading Number="03" Eyebrow="Modularer Monolith" Title="Ein Deployment, klare Grenzen" Lead="Jedes Modul ist ein eigenes Projekt mit Domäne, Persistenz, API und UI. Der Host setzt sie zusammen – so wie die Unternehmensplattform, an der ich arbeite." />
+        <div class="arch-split">
+            <div class="card diagram-card" data-reveal>
+                <ModuleDiagram />
+            </div>
+            <div class="arch-split__code" data-reveal>
+                <CodeBlock Code="@GuestbookModule_Source" Language="CodeLanguage.CSharp" Title="GuestbookModule.cs – ein komplettes Modul" MaxHeight="520px" Compact="true" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section section--alt">
+    <div class="container">
+        <SectionHeading Number="04" Eyebrow="Entscheidungen" Title="Warum so – und nicht anders?" Lead="Architektur ist eine Abfolge von Abwägungen. Hier sind die wichtigsten, kurz begründet." />
+        <div class="adr-grid">
+            @foreach (var (decision, index) in Decisions.Select((d, i) => (d, i)))
+            {
+                <article class="card adr" data-reveal style="--reveal-delay:@(index * 60)ms">
+                    <span class="adr__id">ADR-@((index + 1).ToString("000"))</span>
+                    <h3>@decision.Title</h3>
+                    <p>@decision.Text</p>
+                    <p class="adr__tradeoff"><Icon Name="info" Size="14" /> @decision.Tradeoff</p>
+                </article>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <SectionHeading Number="05" Eyebrow="Qualität & Betrieb" Title="Vom Commit bis in die Cloud" />
+        <ol class="pipeline" data-reveal aria-label="CI/CD-Pipeline">
+            @foreach (var stage in Pipeline)
+            {
+                <li class="pipeline__stage">
+                    <span class="pipeline__icon"><Icon Name="@stage.Icon" Size="20" /></span>
+                    <strong>@stage.Title</strong>
+                    <span>@stage.Text</span>
+                </li>
+            }
+        </ol>
+        <div class="quality-grid">
+            @foreach (var item in Quality)
+            {
+                <div class="quality" data-reveal>
+                    <Icon Name="@item.Icon" Size="18" />
+                    <div>
+                        <strong>@item.Title</strong>
+                        <span>@item.Text</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    private sealed record Item(string Icon, string Title, string Text);
+
+    private sealed record Decision(string Title, string Text, string Tradeoff);
+
+    private static readonly string GuestbookModule_Source = ReadModuleSource();
+
+    private static readonly Item[] Infrastructure =
+    [
+        new("server", "Azure App Service (Linux)", "Hostet die .NET-10-Anwendung mit WebSockets für Blazor Server, Always On und Health-Check-Pfad. HTTPS mit kostenlosem, verwaltetem Zertifikat für die eigene Domain."),
+        new("database", "Azure SQL Database", "Serverless im Rahmen des kostenlosen Angebots: pausiert bei Inaktivität und wacht beim ersten Zugriff auf. Die Anwendung ist darauf ausgelegt und bleibt währenddessen bedienbar."),
+        new("lock", "Managed Identity", "Kein Passwort in Konfiguration oder Pipeline: App Service authentifiziert sich mit seiner Identität bei Microsoft Entra ID und damit bei Azure SQL."),
+        new("activity", "Application Insights", "Requests, Abhängigkeiten, Fehler und Logs per OpenTelemetry – mit Log Analytics als Speicher."),
+    ];
+
+    private static readonly Item[] Flow =
+    [
+        new("globe", "DNS und TLS", "kenokoch.com zeigt auf Azure App Service. Die Verbindung ist per HTTPS gesichert, www wird auf die Hauptdomain umgeleitet."),
+        new("file-code", "Statisches Server-Rendering", "Kestrel rendert die Seite als HTML – schnell und für Suchmaschinen lesbar. Security-Header inklusive Content-Security-Policy mit Nonce kommen mit."),
+        new("zap", "Interaktive Inseln", "Nur die Teile, die interaktiv sein müssen, bauen eine SignalR-Verbindung auf (Live-Zähler, SPS, Gästebuch). Der Rest bleibt reines HTML."),
+        new("cpu", "WebAssembly bei Bedarf", "Auf der Demo-Seite lädt der Browser die .NET-Runtime nach und führt C# lokal aus – ohne Server-Roundtrips."),
+        new("database", "Datenzugriff", "EF Core spricht über Managed Identity mit Azure SQL. Statistik wird gepuffert und gebündelt geschrieben, damit kein Request auf die Datenbank wartet."),
+        new("activity", "Beobachtbarkeit", "Jeder Request landet als Telemetrie in Application Insights; der Server-Timing-Header zeigt die Renderzeit im Browser."),
+    ];
+
+    private static readonly Decision[] Decisions =
+    [
+        new("Blazor statt JavaScript-Framework", "Eine Sprache, ein Typsystem und geteilter Code von der Datenbank bis zur Oberfläche. Für Business-Anwendungen im .NET-Umfeld spart das Kontextwechsel und doppelte Modelle.", "Abwägung: Das Ökosystem an UI-Komponenten ist kleiner als bei React – für Formulare, Tabellen und Dashboards aber mehr als ausreichend."),
+        new("Statisches SSR mit interaktiven Inseln", "Seiten werden als HTML ausgeliefert und laden schnell. Interaktivität gibt es nur dort, wo sie gebraucht wird – und dann gezielt als Server- oder WebAssembly-Komponente.", "Abwägung: Mehr Nachdenken über Render-Modi pro Komponente, dafür deutlich weniger Last und bessere Ladezeiten."),
+        new("Modularer Monolith statt Microservices", "Ein Deployment, eine Datenbank, einfache Transaktionen – aber harte Grenzen zwischen Fachlichkeiten. Einzelne Module ließen sich später herauslösen, wenn es wirklich nötig wird.", "Abwägung: Grenzen müssen aktiv geschützt werden – hier durch Architekturtests im CI."),
+        new("Schema pro Modul", "Jedes Modul besitzt seine Tabellen und Migrationen. Kein Modul liest fremde Tabellen; Daten fließen über Events.", "Abwägung: Abfragen über Modulgrenzen hinweg brauchen eine API oder ein Read-Model statt eines einfachen JOINs."),
+        new("Azure SQL Serverless", "Für eine Seite mit wenig, aber unregelmäßigem Traffic ideal: Abrechnung nach Nutzung bzw. im kostenlosen Kontingent, automatische Pause bei Inaktivität.", "Abwägung: Kaltstart nach der Pause – die Anwendung zeigt das transparent an und blockiert nie den Seitenaufbau."),
+        new("Passwortlos mit Managed Identity", "Keine Geheimnisse in appsettings, Pipeline oder Key Vault für die Datenbank. Rechte werden über Microsoft Entra ID vergeben und sind nachvollziehbar.", "Abwägung: Einmaliges Setup des Datenbankbenutzers per T-SQL nach dem ersten Deployment."),
+    ];
+
+    private static readonly Item[] Pipeline =
+    [
+        new("git-merge", "Push", "auf main oder Pull Request"),
+        new("box", "Build", ".NET 10 · Release · Warnungen = Fehler"),
+        new("check-circle", "Tests", "Unit- und Architekturtests mit xUnit"),
+        new("download", "Publish", "Artefakt inkl. komprimierter Assets"),
+        new("lock", "Deploy", "OIDC-Login, kein Secret im Repository"),
+        new("activity", "Smoke-Test", "/health nach dem Deployment"),
+    ];
+
+    private static readonly Item[] Quality =
+    [
+        new("shield", "Content-Security-Policy", "Skripte nur vom eigenen Origin, Nonce für die Import-Map, keine Frames."),
+        new("gauge", "Rate Limiting", "Fixed-Window-Limits pro IP für alle API-Endpunkte und das Gästebuch."),
+        new("activity", "Health Checks", "Liveness ohne Datenbank, Readiness mit Migrationsstand pro Modul."),
+        new("reset", "Resilienz", "Retry-Strategie für transiente Azure-SQL-Fehler, Migration im Hintergrund."),
+        new("layers", "Central Package Management", "Alle NuGet-Versionen an einer Stelle, transitive Sicherheitsupdates gepinnt."),
+        new("users", "Barrierefreiheit", "Semantisches HTML, Tastaturbedienung, Tabellen als Alternative zu Diagrammen, reduzierte Bewegung."),
+    ];
+
+    private static string ReadModuleSource()
+    {
+        using var stream = typeof(GuestbookModule).Assembly.GetManifestResourceStream("GuestbookModule.cs");
+        if (stream is null)
+        {
+            return "// Quelltext nicht eingebettet";
+        }
+
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
+}

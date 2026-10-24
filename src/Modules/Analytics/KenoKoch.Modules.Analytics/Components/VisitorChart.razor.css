@@ -1,0 +1,276 @@
+.vc {
+    margin: 0;
+    padding: 1.5rem;
+    display: grid;
+    gap: 1.25rem;
+}
+
+.vc__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.vc__title {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.vc__subtitle {
+    margin: .2rem 0 0;
+    font-size: .85rem;
+    color: var(--text-muted);
+}
+
+.vc__kpis {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.vc__kpis > div {
+    display: grid;
+    text-align: right;
+}
+
+.vc__kpi-value {
+    font-size: 1.5rem;
+    font-weight: 650;
+    line-height: 1.1;
+}
+
+.vc__kpi-label {
+    font-size: .75rem;
+    color: var(--text-muted);
+}
+
+.vc__placeholder {
+    height: 250px;
+    border-radius: 12px;
+}
+
+.vc__plot {
+    position: relative;
+    height: 250px;
+}
+
+.vc__canvas {
+    position: absolute;
+    inset: 0 0 26px 0;
+}
+
+.vc__svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.vc__grid {
+    stroke: var(--viz-grid);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    shape-rendering: crispEdges;
+}
+
+.vc__bar {
+    fill: var(--series-1);
+    transition: fill .15s;
+}
+
+.vc__yaxis,
+.vc__labels {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.vc__yaxis span {
+    position: absolute;
+    left: 0;
+    width: calc(44 / 640 * 100% - 10px);
+    transform: translateY(-50%);
+    text-align: right;
+    font-size: .7rem;
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+}
+
+.vc__value {
+    position: absolute;
+    transform: translate(-50%, calc(-100% - 6px));
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+/* Trefferflächen exakt über dem Plotbereich (Top = 26, Bottom = 4 im viewBox-Koordinatensystem 640 × 250). */
+.vc__hits {
+    position: absolute;
+    left: calc(44 / 640 * 100%);
+    right: calc(10 / 640 * 100%);
+    top: calc(26 / 250 * 100%);
+    bottom: calc(4 / 250 * 100%);
+    display: grid;
+    grid-template-columns: repeat(14, 1fr);
+}
+
+.vc__hit {
+    position: relative;
+    outline: none;
+    border-radius: 6px;
+    cursor: default;
+}
+
+.vc__hit:hover,
+.vc__hit:focus-visible {
+    background: var(--viz-hover-wash);
+    z-index: 2;
+}
+
+.vc__hit:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--focus-ring);
+}
+
+.vc__tip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% - var(--top) + 10px);
+    transform: translate(-50%, 4px);
+    display: grid;
+    gap: .1rem;
+    min-width: 132px;
+    padding: .5rem .7rem;
+    border-radius: 10px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-lg);
+    color: var(--text-muted);
+    font-size: .75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s, transform .15s;
+}
+
+.vc__tip strong {
+    color: var(--text);
+    font-size: .9rem;
+}
+
+.vc__hit--start .vc__tip {
+    left: 0;
+    transform: translate(0, 4px);
+}
+
+.vc__hit--end .vc__tip {
+    left: auto;
+    right: 0;
+    transform: translate(0, 4px);
+}
+
+.vc__hit:hover .vc__tip,
+.vc__hit:focus-visible .vc__tip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+.vc__hit--start:hover .vc__tip,
+.vc__hit--start:focus-visible .vc__tip,
+.vc__hit--end:hover .vc__tip,
+.vc__hit--end:focus-visible .vc__tip {
+    transform: none;
+}
+
+.vc__xaxis {
+    position: absolute;
+    left: calc(44 / 640 * 100%);
+    right: calc(10 / 640 * 100%);
+    bottom: 0;
+    height: 22px;
+    display: grid;
+    grid-template-columns: repeat(14, 1fr);
+    font-size: .7rem;
+    color: var(--text-faint);
+    text-align: center;
+    align-items: end;
+}
+
+.vc__xaxis .is-today {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.vc__footer {
+    display: grid;
+    gap: .6rem;
+}
+
+.vc__details {
+    border-top: 1px solid var(--border);
+    padding-top: .6rem;
+}
+
+.vc__details summary {
+    cursor: pointer;
+    font-size: .85rem;
+    color: var(--text-muted);
+}
+
+.vc__details summary:hover {
+    color: var(--text);
+}
+
+.vc__details[open] summary {
+    margin-bottom: .75rem;
+}
+
+.vc__top {
+    border-top: 1px solid var(--border);
+    padding-top: .75rem;
+    font-size: .85rem;
+}
+
+.vc__top-title {
+    color: var(--text-muted);
+}
+
+.vc__top ol {
+    list-style: none;
+    margin: .5rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: .4rem .75rem;
+}
+
+.vc__top li {
+    display: flex;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .35rem .6rem;
+    border-radius: 8px;
+    background: var(--surface-2);
+}
+
+.vc__top li span {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+}
+
+@media (max-width: 560px) {
+    .vc {
+        padding: 1.1rem;
+    }
+
+    .vc__plot {
+        height: 220px;
+    }
+
+    .vc__xaxis span:nth-child(odd):not(.is-today) {
+        visibility: hidden;
+    }
+}

@@ -1,0 +1,176 @@
+.code-block {
+    margin: 0;
+    border-radius: var(--radius-lg, 16px);
+    border: 1px solid var(--code-border, rgba(255, 255, 255, .08));
+    background: var(--code-bg, #0b0d17);
+    box-shadow: var(--shadow-lg, 0 20px 50px -20px rgba(0, 0, 0, .6));
+    overflow: hidden;
+    color: var(--code-text, #d6d9ea);
+    font-family: var(--font-mono, ui-monospace, monospace);
+    min-width: 0;
+}
+
+.code-block__header {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .6rem .9rem;
+    border-bottom: 1px solid var(--code-border, rgba(255, 255, 255, .08));
+    background: var(--code-header, rgba(255, 255, 255, .03));
+    font-size: .75rem;
+    color: var(--code-muted, #8b90aa);
+}
+
+.code-block__dots {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.code-block__dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff5f57;
+}
+
+.code-block__dots i:nth-child(2) {
+    background: #febc2e;
+}
+
+.code-block__dots i:nth-child(3) {
+    background: #28c840;
+}
+
+.code-block__title {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--code-text, #d6d9ea);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.code-block__spacer {
+    flex: 1;
+}
+
+.code-block__lang {
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-size: .65rem;
+    padding: .15rem .45rem;
+    border-radius: 6px;
+    border: 1px solid var(--code-border, rgba(255, 255, 255, .08));
+}
+
+.code-block__copy {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    padding: .2rem .4rem;
+    border-radius: 6px;
+    transition: color .2s, background .2s;
+}
+
+.code-block__copy:hover,
+.code-block__copy:focus-visible {
+    color: var(--code-text, #fff);
+    background: rgba(255, 255, 255, .06);
+}
+
+.code-block__copy.is-copied {
+    color: var(--success, #34d399);
+}
+
+.code-block__pre {
+    margin: 0;
+    padding: 1rem 0;
+    overflow: auto;
+    font-size: .8125rem;
+    line-height: 1.7;
+    tab-size: 4;
+    counter-reset: line;
+}
+
+.code-block--compact .code-block__pre {
+    font-size: .75rem;
+    line-height: 1.6;
+    padding: .75rem 0;
+}
+
+.code-block__pre code {
+    display: block;
+    min-width: max-content;
+    font-family: inherit;
+}
+
+.code-block__pre ::deep .ln {
+    display: block;
+    padding: 0 1.1rem;
+    min-height: 1.7em;
+    white-space: pre;
+}
+
+.code-block__pre--lines ::deep .ln {
+    padding-left: 3.6rem;
+    position: relative;
+}
+
+.code-block__pre--lines ::deep .ln::before {
+    counter-increment: line;
+    content: counter(line);
+    position: absolute;
+    left: 0;
+    width: 2.6rem;
+    text-align: right;
+    color: var(--code-line-number, rgba(255, 255, 255, .22));
+    user-select: none;
+}
+
+.code-block__pre ::deep .ln--hl {
+    background: linear-gradient(90deg, rgba(124, 92, 255, .22), rgba(124, 92, 255, .04));
+    box-shadow: inset 2px 0 0 var(--accent-1, #7c5cff);
+}
+
+.code-block--animate .code-block__pre ::deep .ln {
+    opacity: 0;
+    transform: translateX(-6px);
+    animation: code-line-in .45s cubic-bezier(.2, .8, .2, 1) forwards;
+    animation-delay: calc(var(--i) * 70ms + 300ms);
+}
+
+@keyframes code-line-in {
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .code-block--animate .code-block__pre ::deep .ln {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Token-Farben (an One Dark / VS Code Dark+ angelehnt) */
+.code-block ::deep .tok-c { color: #6a7396; font-style: italic; }
+.code-block ::deep .tok-pg { color: #6a7396; }
+.code-block ::deep .tok-s { color: #a5e3a0; }
+.code-block ::deep .tok-y { color: #8ec5ff; }
+.code-block ::deep .tok-g { color: #f5c878; }
+.code-block ::deep .tok-v { color: #ff9e8a; }
+.code-block ::deep .tok-i { color: #8ec5ff; }
+.code-block ::deep .tok-p { color: #ff9e8a; }
+.code-block ::deep .tok-d { color: #f5c878; }
+.code-block ::deep .tok-k { color: #c49bff; }
+.code-block ::deep .tok-t { color: #5fd4c4; }
+.code-block ::deep .tok-f { color: #82b4ff; }
+.code-block ::deep .tok-n { color: #f8a96b; }

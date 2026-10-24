@@ -1,0 +1,39 @@
+@* Bewusst OHNE Render-Modus: klassisches Server-Rendering mit Formular-Post und Blazor Enhanced Forms. *@
+<article class="rm-card rm-card--ssr">
+    <header class="rm-card__head">
+        <span class="rm-card__mode"><Icon Name="file-code" Size="14" /> Static SSR</span>
+        <h3 class="rm-card__title">Klassisch vom Server</h3>
+        <p class="rm-card__lead">HTML wird pro Anfrage auf dem Server erzeugt – schnell, suchmaschinenfreundlich und ganz ohne dauerhafte Verbindung.</p>
+    </header>
+
+    <div class="rm-card__status is-static">
+        <span><Icon Name="check-circle" Size="15" /> Kein WebSocket, kein WebAssembly</span>
+    </div>
+
+    <dl class="rm-card__facts">
+        <div><dt>Renderer</dt><dd><code>@RendererInfo.Name</code></dd></div>
+        <div><dt>Interaktiv</dt><dd>@(RendererInfo.IsInteractive ? "ja" : "nein – nur HTML")</dd></div>
+        <div><dt>Gerendert</dt><dd>@Fmt.TimePrecise(GermanTime.ToGerman(DateTimeOffset.UtcNow)) Uhr</dd></div>
+        <div><dt>Transport</dt><dd>HTTP POST + Enhanced Navigation</dd></div>
+    </dl>
+
+    <form method="post" @formname="ssr-counter" @onsubmit="Increment" data-enhance class="rm-card__counter">
+        <AntiforgeryToken />
+        <input type="hidden" name="Count" value="@Count" />
+        <button type="submit" class="btn btn--secondary btn--sm"><Icon Name="pointer" Size="15" /> Klick mich</button>
+        <output class="rm-card__count" aria-live="polite">@Count</output>
+        <span class="rm-card__latency">Formular-Post</span>
+    </form>
+
+    <p class="rm-card__explain">
+        Jeder Klick schickt ein Formular. Blazor lädt die Antwort per <code>fetch</code> und tauscht nur
+        die geänderten DOM-Teile aus – die Seite springt nicht und die anderen Demos laufen weiter.
+    </p>
+</article>
+
+@code {
+    [SupplyParameterFromForm(FormName = "ssr-counter")]
+    public int Count { get; set; }
+
+    private void Increment() => Count++;
+}

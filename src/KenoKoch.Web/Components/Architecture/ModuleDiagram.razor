@@ -1,0 +1,83 @@
+@* Abhängigkeitsdiagramm des modularen Monolithen (Pfeil = "referenziert"). *@
+<figure class="diagram diagram--modules">
+    <svg viewBox="0 0 900 500" role="img" aria-labelledby="module-diagram-title module-diagram-desc">
+        <title id="module-diagram-title">Aufbau des modularen Monolithen</title>
+        <desc id="module-diagram-desc">Der Host referenziert vier Module. Module referenzieren sich nicht gegenseitig; das Modul Besucher und Echtzeit kennt nur die Contracts von Gästebuch und SPS-Simulator. Alle Module bauen auf den Bausteinen BuildingBlocks und UI auf.</desc>
+        <defs>
+            <marker id="md-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" class="diagram__arrowhead" />
+            </marker>
+            <marker id="md-arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" class="diagram__arrowhead diagram__arrowhead--accent" />
+            </marker>
+        </defs>
+
+        @* Host und WebAssembly-Client *@
+        <rect x="40" y="20" width="560" height="74" rx="14" class="diagram__box diagram__box--host" />
+        <text x="62" y="50" class="diagram__title">KenoKoch.Web · Host</text>
+        <text x="62" y="74" class="diagram__text">Komposition · Seiten · Layout · OpenAPI · Health · Security</text>
+
+        <rect x="660" y="20" width="200" height="74" rx="14" class="diagram__box" />
+        <text x="680" y="50" class="diagram__title">Web.Client</text>
+        <text x="680" y="74" class="diagram__text">WebAssembly</text>
+        <path d="M600,57 H652" class="diagram__edge" marker-end="url(#md-arrow)" />
+
+        @* Host → Module *@
+        @foreach (var x in new[] { 135, 345, 555, 765 })
+        {
+            <path d="@($"M{Math.Min(x, 560)},94 V118 H{x} V146")" class="diagram__edge" marker-end="url(#md-arrow)" />
+        }
+
+        @* Module *@
+        @foreach (var module in Modules)
+        {
+            <g>
+                <rect x="@module.X" y="150" width="190" height="96" rx="14" class="diagram__box diagram__box--module @module.Css" />
+                <text x="@(module.X + 18)" y="180" class="diagram__title">@module.Name</text>
+                <text x="@(module.X + 18)" y="203" class="diagram__text">@module.Line1</text>
+                <text x="@(module.X + 18)" y="223" class="diagram__text diagram__text--mono">@module.Line2</text>
+            </g>
+        }
+
+        @* Contracts *@
+        <rect x="250" y="300" width="190" height="58" rx="12" class="diagram__box diagram__box--contract" />
+        <text x="268" y="325" class="diagram__title diagram__title--sm">Guestbook.Contracts</text>
+        <text x="268" y="345" class="diagram__text diagram__text--mono">GuestbookEntrySubmitted</text>
+
+        <rect x="670" y="300" width="190" height="58" rx="12" class="diagram__box diagram__box--contract" />
+        <text x="688" y="325" class="diagram__title diagram__title--sm">Plc.Contracts</text>
+        <text x="688" y="345" class="diagram__text diagram__text--mono">PlcStarted · PlcAlarmRaised</text>
+
+        <path d="M345,246 V292" class="diagram__edge" marker-end="url(#md-arrow)" />
+        <path d="M765,246 V292" class="diagram__edge" marker-end="url(#md-arrow)" />
+
+        @* Analytics → Contracts (einzige modulübergreifende Abhängigkeit) *@
+        <path d="M520,246 V272 H400 V292" class="diagram__edge diagram__edge--accent" marker-end="url(#md-arrow-accent)" />
+        <path d="M590,246 V272 H720 V292" class="diagram__edge diagram__edge--accent" marker-end="url(#md-arrow-accent)" />
+        <rect x="474" y="262" width="164" height="22" rx="11" class="diagram__label-bg" />
+        <text x="556" y="277" class="diagram__label" text-anchor="middle">nur über Contracts</text>
+
+        @* Fundament *@
+        <rect x="40" y="410" width="400" height="66" rx="14" class="diagram__box diagram__box--base" />
+        <text x="62" y="438" class="diagram__title">BuildingBlocks</text>
+        <text x="62" y="460" class="diagram__text">IModule · Event-Bus · Persistenz · Health Checks</text>
+
+        <rect x="460" y="410" width="400" height="66" rx="14" class="diagram__box diagram__box--base" />
+        <text x="482" y="438" class="diagram__title">UI</text>
+        <text x="482" y="460" class="diagram__text">Icons · Code-Blöcke · Formatierung (Server + WASM)</text>
+
+        <text x="450" y="396" class="diagram__caption" text-anchor="middle">von allen Modulen genutzt</text>
+    </svg>
+</figure>
+
+@code {
+    private sealed record ModuleBox(int X, string Name, string Line1, string Line2, string Css);
+
+    private static readonly ModuleBox[] Modules =
+    [
+        new(40, "Profil", "Lebenslauf & Skills", "/api/profile", "diagram__box--profile"),
+        new(250, "Gästebuch", "EF Core · Validierung", "schema [guestbook]", "diagram__box--guestbook"),
+        new(460, "Besucher & Echtzeit", "SignalR · Statistik", "schema [analytics]", "diagram__box--analytics"),
+        new(670, "SPS-Simulator", "Soft-SPS · HMI", "OB1 · 100 ms", "diagram__box--plc"),
+    ];
+}

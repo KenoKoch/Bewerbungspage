@@ -1,0 +1,63 @@
+@* Läuft als InteractiveWebAssembly: erst auf dem Server vorgerendert, dann im Browser übernommen. *@
+<article class="rm-card rm-card--wasm">
+    <header class="rm-card__head">
+        <span class="rm-card__mode"><Icon Name="globe" Size="14" /> InteractiveWebAssembly</span>
+        <h3 class="rm-card__title">.NET im Browser</h3>
+        <p class="rm-card__lead">Die Komponente wird vorgerendert und dann von der .NET-Runtime in Ihrem Browser übernommen.</p>
+    </header>
+
+    <div class="rm-card__status @(RendererInfo.IsInteractive ? "is-live" : "is-pending")">
+        @if (RendererInfo.IsInteractive)
+        {
+            <span><Icon Name="check-circle" Size="15" /> Läuft jetzt in WebAssembly</span>
+        }
+        else
+        {
+            <span><span class="spinner spinner--sm"></span> Vorgerendert – .NET-Runtime wird geladen …</span>
+        }
+    </div>
+
+    <dl class="rm-card__facts">
+        <div><dt>Renderer</dt><dd><code>@RendererInfo.Name</code></dd></div>
+        <div><dt>Betriebssystem</dt><dd>@RuntimeInformation.OSDescription</dd></div>
+        <div><dt>Architektur</dt><dd>@RuntimeInformation.ProcessArchitecture</dd></div>
+        <div><dt>Runtime</dt><dd>@RuntimeInformation.FrameworkDescription</dd></div>
+        <div><dt>Vorgerendert</dt><dd title="Per [PersistentState] vom Server in den Browser übertragen">@PrerenderedOn</dd></div>
+    </dl>
+
+    <div class="rm-card__counter">
+        <button type="button" class="btn btn--secondary btn--sm" disabled="@(!RendererInfo.IsInteractive)" @onclick="Increment">
+            <Icon Name="pointer" Size="15" /> Klick mich
+        </button>
+        <output class="rm-card__count" aria-live="polite">@_count</output>
+        <span class="rm-card__latency">@_latency</span>
+    </div>
+
+    <p class="rm-card__explain">
+        Jeder Klick wird lokal im Browser verarbeitet – kein Netzwerk, keine Server-Last.
+        <code>[PersistentState]</code> überträgt den Zeitpunkt des Prerenderings vom Server in den Browser.
+    </p>
+</article>
+
+@code {
+    private int _count;
+    private string _latency = string.Empty;
+
+    /// <summary>Wird beim Prerendering auf dem Server gesetzt und per [PersistentState] (neu in .NET 10) in den Browser übernommen.</summary>
+    [PersistentState]
+    public string? PrerenderedOn { get; set; }
+
+    protected override void OnInitialized()
+    {
+        PrerenderedOn ??= $"{DateTime.UtcNow:HH:mm:ss} UTC · {Shorten(RuntimeInformation.OSDescription)}";
+    }
+
+    private void Increment()
+    {
+        var started = System.Diagnostics.Stopwatch.GetTimestamp();
+        _count++;
+        _latency = $"verarbeitet in {Fmt.Microseconds(System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMicroseconds)}";
+    }
+
+    private static string Shorten(string os) => os.Length > 28 ? os[..28] + "…" : os;
+}
