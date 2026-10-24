@@ -410,12 +410,13 @@ textarea {
     background: var(--surface-2);
 }
 
-.theme-toggle__moon,
-:root[data-theme="light"] .theme-toggle__sun {
+/* svg.icon setzt display – daher hier gleich spezifisch selektieren */
+svg.icon.theme-toggle__moon,
+:root[data-theme="light"] svg.icon.theme-toggle__sun {
     display: none;
 }
 
-:root[data-theme="light"] .theme-toggle__moon {
+:root[data-theme="light"] svg.icon.theme-toggle__moon {
     display: inline-block;
 }
 
@@ -423,12 +424,12 @@ textarea {
     display: none;
 }
 
-.site-header__menu-close,
-.nav-open .site-header__menu-open {
+svg.icon.site-header__menu-close,
+.nav-open svg.icon.site-header__menu-open {
     display: none;
 }
 
-.nav-open .site-header__menu-close {
+.nav-open svg.icon.site-header__menu-close {
     display: inline-block;
 }
 
@@ -540,15 +541,25 @@ textarea {
 }
 
 .site-footer__bottom {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     gap: .75rem 1.5rem;
     margin-top: 3rem;
     padding-top: 1.5rem;
-    border-top: 1px solid var(--border);
     font-size: .8rem;
     color: var(--text-faint);
+}
+
+.site-footer__bottom::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: var(--gutter);
+    right: var(--gutter);
+    height: 1px;
+    background: var(--border);
 }
 
 .site-footer__stack,
@@ -565,7 +576,7 @@ textarea {
 
 @media (max-width: 800px) {
     .site-footer__grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -1497,9 +1508,10 @@ a:hover .link-arrow svg {
     color: var(--text);
 }
 
+/* Positionen bewusst außerhalb des Codes: oberhalb des Fensters, an den leeren Zeilenenden rechts und darunter */
 .float-card--cloud {
-    top: 0;
-    right: 0;
+    top: -1.4rem;
+    left: 3.5rem;
 }
 
 .float-card--cloud .float-card__icon {
@@ -1507,8 +1519,8 @@ a:hover .link-arrow svg {
 }
 
 .float-card--render {
-    left: -.5rem;
-    bottom: 34%;
+    right: -1.25rem;
+    top: 47%;
     animation-delay: -2.4s;
 }
 
@@ -1517,8 +1529,8 @@ a:hover .link-arrow svg {
 }
 
 .float-card--db {
-    right: 8%;
-    bottom: .25rem;
+    right: 4rem;
+    bottom: -.6rem;
     animation-delay: -4.6s;
 }
 
@@ -1555,7 +1567,7 @@ a:hover .link-arrow svg {
     }
 
     .hero__inner {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .hero__visual {
@@ -1580,8 +1592,12 @@ a:hover .link-arrow svg {
     }
 
     .float-card--cloud {
-        right: -.25rem;
-        top: -.25rem;
+        left: .75rem;
+        top: -.5rem;
+    }
+
+    .float-card--db {
+        right: .5rem;
     }
 
     .social--hero {
@@ -1751,11 +1767,11 @@ a:hover .link-arrow svg {
 
 @media (max-width: 960px) {
     .about {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .highlights {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -1825,7 +1841,7 @@ a:hover .link-arrow svg {
 
 @media (max-width: 960px) {
     .career {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .career__intro {
@@ -1925,7 +1941,7 @@ a:hover .link-arrow svg {
 
 @media (max-width: 640px) {
     .bento {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .bento__item--feature,
@@ -1937,18 +1953,22 @@ a:hover .link-arrow svg {
 /* ---------- Architektur-Teaser ---------- */
 .arch-teaser {
     display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-    gap: clamp(1.5rem, 4vw, 3rem);
-    align-items: center;
+    gap: clamp(1.5rem, 3vw, 2.25rem);
 }
 
 .arch-teaser__diagram {
-    padding: 1.25rem;
+    padding: clamp(1rem, 2.5vw, 2rem);
+}
+
+.arch-teaser__diagram .diagram svg {
+    max-width: 960px;
+    margin-inline: auto;
 }
 
 .arch-teaser__points {
     display: grid;
-    gap: 1.25rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.5rem;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -1976,12 +1996,19 @@ a:hover .link-arrow svg {
 }
 
 .arch-teaser__cta {
-    padding-left: calc(22px + .9rem);
+    display: flex;
+    justify-content: center;
 }
 
-@media (max-width: 960px) {
-    .arch-teaser {
-        grid-template-columns: 1fr;
+@media (max-width: 1080px) {
+    .arch-teaser__points {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .arch-teaser__points {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -2340,7 +2367,7 @@ a:hover .link-arrow svg {
 
 @media (max-width: 960px) {
     .demo-section__points {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -2800,7 +2827,7 @@ a:hover .link-arrow svg {
 
 @media (max-width: 900px) {
     .api {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -2887,7 +2914,6 @@ a:hover .link-arrow svg {
     text-align: right;
     min-width: 0;
     overflow-wrap: anywhere;
-    font-variant-numeric: tabular-nums;
 }
 
 .runtime__empty {
@@ -3069,7 +3095,7 @@ a:hover .link-arrow svg {
 
 @media (max-width: 560px) {
     .mx__facts > div {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: .35rem;
     }
 }
@@ -3140,9 +3166,14 @@ a:hover .link-arrow svg {
 
 .arch-split {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.25rem;
     align-items: start;
+}
+
+.arch-split .diagram svg {
+    max-width: 960px;
+    margin-inline: auto;
 }
 
 .adr-grid {
@@ -3288,7 +3319,7 @@ a:hover .link-arrow svg {
     }
 
     .arch-split {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -3297,7 +3328,7 @@ a:hover .link-arrow svg {
     .adr-grid,
     .quality-grid,
     .flow {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .pipeline {

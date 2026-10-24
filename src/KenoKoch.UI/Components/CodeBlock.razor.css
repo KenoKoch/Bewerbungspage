@@ -104,10 +104,13 @@
     padding: .75rem 0;
 }
 
+/* Die Zeilenumbrüche zwischen den Zeilen-Spans bleiben für "Kopieren" erhalten,
+   dürfen aber keine zusätzlichen Leerzeilen erzeugen – daher white-space nur pro Zeile. */
 .code-block__pre code {
     display: block;
     min-width: max-content;
     font-family: inherit;
+    white-space: normal;
 }
 
 .code-block__pre ::deep .ln {

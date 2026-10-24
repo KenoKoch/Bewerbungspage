@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # NuGet-Pakete (zentral in Directory.Packages.props)
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dotnet:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+      tests:
+        patterns:
+          - "xunit*"
+          - "coverlet*"
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

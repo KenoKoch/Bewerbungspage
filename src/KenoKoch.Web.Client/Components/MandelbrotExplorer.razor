@@ -209,7 +209,8 @@
                 {
                     // Glatte Einfärbung (normalized iteration count), logarithmisch auf die Palette abgebildet
                     var smooth = Math.Max(0, n + 1 - Math.Log(Math.Log(Math.Sqrt(zr2 + zi2))) / Math.Log(2));
-                    var t = Math.Log(smooth + 1) / Math.Log(max + 1);
+                    // Potenzkurve: schnell entkommende Punkte bleiben dunkel, der Rand der Menge leuchtet.
+                    var t = Math.Pow(Math.Log(smooth + 1) / Math.Log(max + 1), 2.2);
                     color = _palette[(int)Math.Clamp(t * (_palette.Length - 1), 0, _palette.Length - 1)];
                 }
 

@@ -1,0 +1,43 @@
+# Stellt die Azure-Infrastruktur per Bicep bereit (manuell auslösen).
+# Vorher in infra/main.bicepparam die Platzhalter ersetzen.
+name: Infrastruktur
+
+on:
+  workflow_dispatch:
+    inputs:
+      what-if:
+        description: Nur Vorschau (what-if), nichts ändern
+        type: boolean
+        default: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Bicep ${{ inputs.what-if && '(what-if)' || 'deploy' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Bei Azure anmelden (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Bicep prüfen
+        run: az bicep build --file infra/main.bicep --stdout > /dev/null
+
+      - name: Bereitstellen
+        run: |
+          mode="create"
+          if [ "${{ inputs.what-if }}" = "true" ]; then mode="what-if"; fi
+          az deployment group "$mode" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --template-file infra/main.bicep \
+            --parameters infra/main.bicepparam

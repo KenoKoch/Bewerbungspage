@@ -1,9 +1,17 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="README.md" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/KenoKoch.BuildingBlocks/KenoKoch.BuildingBlocks.csproj" />
     <Project Path="src/KenoKoch.UI/KenoKoch.UI.csproj" />
     <Project Path="src/KenoKoch.Web.Client/KenoKoch.Web.Client.csproj" />
     <Project Path="src/KenoKoch.Web/KenoKoch.Web.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
     <Project Path="src/Modules/Analytics/KenoKoch.Modules.Analytics/KenoKoch.Modules.Analytics.csproj" />
     <Project Path="src/Modules/Guestbook/KenoKoch.Modules.Guestbook.Contracts/KenoKoch.Modules.Guestbook.Contracts.csproj" />
     <Project Path="src/Modules/Guestbook/KenoKoch.Modules.Guestbook/KenoKoch.Modules.Guestbook.csproj" />
@@ -11,5 +19,20 @@
     <Project Path="src/Modules/Plc/KenoKoch.Modules.Plc/KenoKoch.Modules.Plc.csproj" />
     <Project Path="src/Modules/Profile/KenoKoch.Modules.Profile/KenoKoch.Modules.Profile.csproj" />
   </Folder>
-  <Folder Name="/src/Modules/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/KenoKoch.Tests/KenoKoch.Tests.csproj" />
+  </Folder>
+  <Folder Name="/infra/">
+    <File Path="infra/main.bicep" />
+    <File Path="infra/github-federated-credential.json" />
+    <File Path="infra/main.bicepparam" />
+    <File Path="infra/modules/customDomain.bicep" />
+    <File Path="infra/modules/sniBinding.bicep" />
+    <File Path="infra/sql/grant-webapp-access.sql" />
+  </Folder>
+  <Folder Name="/.github/">
+    <File Path=".github/dependabot.yml" />
+    <File Path=".github/workflows/ci-cd.yml" />
+    <File Path=".github/workflows/infrastructure.yml" />
+  </Folder>
 </Solution>

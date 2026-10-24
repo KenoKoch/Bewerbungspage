@@ -1,0 +1,110 @@
+# Build, Test und Deployment nach Azure App Service.
+# Pull Requests werden gebaut und getestet, Pushes auf main zusätzlich ausgeliefert.
+# Anmeldung bei Azure per OpenID Connect – es liegt kein Passwort und kein Publish-Profil im Repository.
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Commit-Hash landet über Source Link in der Versionsinfo
+
+      - name: .NET einrichten
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore KenoKoch.slnx
+
+      - name: Build (Warnungen = Fehler)
+        run: dotnet build KenoKoch.slnx -c Release --no-restore
+
+      - name: Tests (Unit, Architektur, Integration)
+        run: dotnet test KenoKoch.slnx -c Release --no-build --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+
+      - name: Testergebnisse hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+
+      - name: Publish
+        run: dotnet publish src/KenoKoch.Web/KenoKoch.Web.csproj -c Release -o publish
+
+      - name: Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp
+          path: publish
+          if-no-files-found: error
+
+  deploy:
+    name: Deploy nach Azure
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.webapp-url }}
+    permissions:
+      id-token: write # OIDC-Token für azure/login
+      contents: read
+    steps:
+      - name: Artefakt laden
+        uses: actions/download-artifact@v4
+        with:
+          name: webapp
+          path: publish
+
+      - name: Bei Azure anmelden (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Auf App Service ausliefern
+        id: deploy
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          package: publish
+
+      - name: Smoke-Test (/health)
+        run: |
+          url="${{ steps.deploy.outputs.webapp-url }}/health"
+          for attempt in $(seq 1 20); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
+            if [ "$status" = "200" ]; then
+              echo "Health Check erfolgreich ($url)"
+              exit 0
+            fi
+            echo "Versuch $attempt: HTTP $status – neuer Versuch in 15 s"
+            sleep 15
+          done
+          echo "Health Check fehlgeschlagen"
+          exit 1

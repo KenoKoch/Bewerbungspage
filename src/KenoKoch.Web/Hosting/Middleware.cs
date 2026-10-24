@@ -20,7 +20,8 @@ public static class Middleware
 
         return app.Use(async (context, next) =>
         {
-            var nonce = Convert.ToBase64String(RandomNumberGenerator.GetBytes(16));
+            // Hex statt Base64: keine Zeichen, die im HTML-Attribut kodiert werden müssten.
+            var nonce = Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(16));
             context.Items[CspNonceKey] = nonce;
 
             context.Response.OnStarting(() =>

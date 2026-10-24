@@ -33,9 +33,10 @@
     color: var(--text-muted);
 }
 
-.gb__form {
+/* Das <form> rendert die EditForm-Komponente – scoped CSS erreicht es nur über ::deep. */
+.gb ::deep .gb__form {
     display: grid;
-    gap: 1rem;
+    gap: 1.1rem;
 }
 
 .gb__hp {
@@ -178,7 +179,7 @@
 
 @media (max-width: 900px) {
     .gb__grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .sql-inspector__meta {
