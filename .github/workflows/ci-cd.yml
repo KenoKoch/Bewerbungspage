@@ -47,7 +47,7 @@ jobs:
 
       - name: Testergebnisse hochladen
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: TestResults
@@ -56,7 +56,7 @@ jobs:
         run: dotnet publish src/KenoKoch.Web/KenoKoch.Web.csproj -c Release -o publish
 
       - name: Artefakt hochladen
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: webapp
           path: publish
