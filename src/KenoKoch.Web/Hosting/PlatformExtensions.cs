@@ -15,9 +15,9 @@ public sealed class SiteOptions
     public const string SectionName = "Site";
 
     /// <summary>Öffentliche Basis-URL (für Canonical-Links, Open Graph und Sitemap).</summary>
-    public string BaseUrl { get; set; } = "https://kenokoch.com";
+    public string BaseUrl { get; set; } = "https://kenokoch.de";
 
-    /// <summary>Optional: Host, auf den "www." umgeleitet wird (z. B. "kenokoch.com").</summary>
+    /// <summary>Optional: Host, auf den "www." umgeleitet wird (z. B. "kenokoch.de").</summary>
     public string? CanonicalHost { get; set; }
 }
 
@@ -45,7 +45,7 @@ public static class PlatformExtensions
         {
             document.Info = new OpenApiInfo
             {
-                Title = "KenoKoch.com API",
+                Title = "KenoKoch.de API",
                 Version = "v1",
                 Description = "Öffentliche Endpunkte der Bewerbungsseite von Keno Koch – ASP.NET Core Minimal APIs. " +
                               "Jedes Modul des modularen Monolithen bringt seine eigenen Endpunkte mit.",
@@ -89,7 +89,7 @@ public static class PlatformExtensions
 
         app.MapOpenApi();
         app.MapScalarApiReference(options => options
-            .WithTitle("KenoKoch.com API")
+            .WithTitle("KenoKoch.de API")
             .WithTheme(ScalarTheme.Purple));
 
         var platform = app.MapGroup("/api")

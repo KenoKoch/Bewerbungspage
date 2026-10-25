@@ -1,8 +1,8 @@
 @* Azure-Topologie der Website: vom Browser über App Service bis Azure SQL, Monitoring und CI/CD. *@
 <figure class="diagram diagram--azure">
     <svg viewBox="0 0 980 520" role="img" aria-labelledby="azure-diagram-title azure-diagram-desc">
-        <title id="azure-diagram-title">Azure-Architektur von KenoKoch.com</title>
-        <desc id="azure-diagram-desc">Der Browser ruft kenokoch.com über HTTPS auf. Azure App Service (Linux, .NET 10) liefert statisches HTML, hält SignalR-Verbindungen und stellt die WebAssembly-Dateien bereit. Die Anwendung verbindet sich per Managed Identity mit Azure SQL Database (Serverless) und sendet Telemetrie an Application Insights. GitHub Actions baut, testet und deployt per OpenID Connect; die Infrastruktur wird mit Bicep beschrieben.</desc>
+        <title id="azure-diagram-title">Azure-Architektur von KenoKoch.de</title>
+        <desc id="azure-diagram-desc">Der Browser ruft kenokoch.de über HTTPS auf. Azure App Service (Linux, .NET 10) liefert statisches HTML, hält SignalR-Verbindungen und stellt die WebAssembly-Dateien bereit. Die Anwendung verbindet sich per Managed Identity mit Azure SQL Database (Serverless) und sendet Telemetrie an Application Insights. GitHub Actions baut, testet und deployt per OpenID Connect; die Infrastruktur wird mit Bicep beschrieben.</desc>
         <defs>
             <marker id="az-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M0,0 L10,5 L0,10 z" class="diagram__arrowhead" />
@@ -82,7 +82,7 @@
         <path d="M600,410 V439 H692" class="diagram__edge" marker-end="url(#az-arrow)" />
         <text x="612" y="460" class="diagram__label diagram__label--plain">Telemetrie</text>
 
-        <text x="70" y="400" class="diagram__caption">kenokoch.com</text>
+        <text x="70" y="400" class="diagram__caption">kenokoch.de</text>
         <text x="70" y="418" class="diagram__caption">DNS → App Service</text>
     </svg>
 </figure>

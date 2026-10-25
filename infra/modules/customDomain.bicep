@@ -10,7 +10,7 @@ param location string
 @description('Resource-ID des App Service Plans.')
 param planId string
 
-@description('Domain, z. B. "kenokoch.com" oder "www.kenokoch.com".')
+@description('Domain, z. B. "kenokoch.de" oder "www.kenokoch.de".')
 param domainName string
 
 resource site 'Microsoft.Web/sites@2024-04-01' existing = {

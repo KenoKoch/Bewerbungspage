@@ -113,6 +113,6 @@ public sealed class WebsiteTests(WebsiteFactory factory) : IClassFixture<Website
 
         Assert.Contains("\"/api/profile\"", document, StringComparison.Ordinal);
         Assert.Contains("\"/api/plc/status\"", document, StringComparison.Ordinal);
-        Assert.Contains("KenoKoch.com API", document, StringComparison.Ordinal);
+        Assert.Contains("KenoKoch.de API", document, StringComparison.Ordinal);
     }
 }

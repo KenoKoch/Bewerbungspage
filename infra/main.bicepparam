@@ -14,5 +14,5 @@ param useSqlFreeLimit = true
 param sqlFreeLimitExhaustionBehavior = 'AutoPause'
 
 // Erst setzen, wenn die Domain registriert ist und die DNS-Einträge angelegt sind (siehe README)
-param customDomain = ''
+param customDomain = 'kenokoch.de'
 param includeWww = true

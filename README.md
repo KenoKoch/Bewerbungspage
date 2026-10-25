@@ -1,4 +1,4 @@
-# KenoKoch.com – Bewerbungsseite als echtes .NET-Projekt
+# KenoKoch.de – Bewerbungsseite als echtes .NET-Projekt
 
 [![CI/CD](https://github.com/KenoKoch/Bewerbungspage/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/KenoKoch/Bewerbungspage/actions/workflows/ci-cd.yml)
 
@@ -24,7 +24,7 @@ wie die Seite gebaut ist.
 4. [Inhalte anpassen](#inhalte-anpassen)
 5. [Tests](#tests)
 6. [Deployment auf Azure](#deployment-auf-azure)
-7. [Domain kenokoch.com verbinden](#domain-kenokochcom-verbinden)
+7. [Domain kenokoch.de verbinden](#domain-kenokochcom-verbinden)
 8. [Konfiguration](#konfiguration)
 9. [Kosten und Betrieb](#kosten-und-betrieb)
 10. [Lizenzen und Credits](#lizenzen-und-credits)
@@ -117,7 +117,7 @@ Platzhalter stehen in `[eckigen Klammern]`. Im Development-Modus zeigt die Seite
 
 - [ ] `profile.json`: Unternehmen, Zeiträume, Orte, Ausbildung, Englisch-Niveau und LinkedIn-Link (Platzhalter-Links werden automatisch ausgeblendet). GitHub zeigt auf `KenoKoch/Bewerbungspage` – das Repository muss öffentlich sein, damit die Quelltext-Links funktionieren.
 - [ ] `profile.json`: Inhalte der Stationen und Skills – sie sind aus deiner Beschreibung abgeleitet, bitte auf Richtigkeit prüfen.
-- [ ] `profile.json`: Die E-Mail-Adresse `kontakt@kenokoch.com` ist ein Vorschlag – das Postfach muss existieren.
+- [ ] `profile.json`: Die E-Mail-Adresse `kontakt@kenokoch.de` ist ein Vorschlag – das Postfach muss existieren.
 - [ ] Optional `cvUrl` setzen (z. B. `/files/lebenslauf.pdf` und die Datei unter `src/KenoKoch.Web/wwwroot/files/` ablegen).
 - [ ] `Impressum.razor` und `Datenschutz.razor` unter `src/KenoKoch.Web/Components/Pages/`: Anschrift eintragen. Die Texte sind Vorlagen und ersetzen keine Rechtsberatung.
 - [ ] `infra/main.bicepparam`: Entra-Administrator für Azure SQL eintragen.
@@ -210,7 +210,7 @@ Die Infrastruktur lässt sich später über den Workflow **Infrastruktur** (zuer
 
 ---
 
-## Domain kenokoch.com verbinden
+## Domain kenokoch.de verbinden
 
 0. Die Domain registrieren, falls noch nicht geschehen: bei einem Registrar mit DNS-Verwaltung (z. B. INWX, IONOS, Strato)
    oder direkt in Azure als *App Service-Domäne* (die DNS-Zone liegt dann in Azure DNS).
@@ -223,10 +223,10 @@ Die Infrastruktur lässt sich später über den Workflow **Infrastruktur** (zuer
    | A | `@` | IP-Adresse der Web App: `Resolve-DnsName <webAppHostName>` oder Azure-Portal → Web App → *Benutzerdefinierte Domänen* |
    | CNAME | `www` | Ausgabe `webAppHostName` (z. B. `app-kenokoch-a1b2c3.azurewebsites.net`) |
 
-2. Warten, bis die Einträge sichtbar sind (`Resolve-DnsName -Type TXT asuid.kenokoch.com`).
-3. In `infra/main.bicepparam` `customDomain = 'kenokoch.com'` setzen und das Bicep-Deployment erneut ausführen.
+2. Warten, bis die Einträge sichtbar sind (`Resolve-DnsName -Type TXT asuid.kenokoch.de`).
+3. In `infra/main.bicepparam` `customDomain = 'kenokoch.de'` setzen und das Bicep-Deployment erneut ausführen.
    Azure bindet beide Hostnamen und stellt kostenlose, automatisch verlängerte TLS-Zertifikate aus.
-   Die App leitet `www.kenokoch.com` dauerhaft auf `kenokoch.com` um.
+   Die App leitet `www.kenokoch.de` dauerhaft auf `kenokoch.de` um.
 
 ---
 
@@ -236,8 +236,8 @@ Die Infrastruktur lässt sich später über den Workflow **Infrastruktur** (zuer
 |-----------|----------|-----------|
 | `ConnectionStrings:Sql` | leer (Dev: LocalDB) | Datenbank. In Azure per App-Service-Verbindungszeichenfolge mit `Authentication=Active Directory Managed Identity` |
 | `Database:MigrateOnStartup` | `true` | Migrationen aller Module beim Start im Hintergrund anwenden |
-| `Site:BaseUrl` | `https://kenokoch.com` | Kanonische URL für Open Graph, Canonical-Links, JSON-LD |
-| `Site:CanonicalHost` | leer | z. B. `kenokoch.com` – leitet `www.` darauf um |
+| `Site:BaseUrl` | `https://kenokoch.de` | Kanonische URL für Open Graph, Canonical-Links, JSON-LD |
+| `Site:CanonicalHost` | leer | z. B. `kenokoch.de` – leitet `www.` darauf um |
 | `Guestbook:RequireApproval` | `true` (Dev: `false`) | Neue Einträge erst nach Freigabe anzeigen |
 | `Guestbook:MaxEntriesPerVisitor` / `MaxEntriesPerHour` | `3` / `30` | Spam-Schutz |
 | `Plc:MaxConcurrentSessions` / `IdleTimeoutMinutes` | `50` / `10` | Schutz der Server-Ressourcen durch den SPS-Simulator |

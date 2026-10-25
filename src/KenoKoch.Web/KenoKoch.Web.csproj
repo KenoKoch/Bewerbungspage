@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <Description>Host der Bewerbungsseite KenoKoch.com – setzt die Module zum modularen Monolithen zusammen.</Description>
+    <Description>Host der Bewerbungsseite KenoKoch.de – setzt die Module zum modularen Monolithen zusammen.</Description>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     <UserSecretsId>kenokoch-web-5b1f6f6e</UserSecretsId>
   </PropertyGroup>

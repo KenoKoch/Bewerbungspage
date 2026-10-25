@@ -2,7 +2,7 @@
 @using KenoKoch.Modules.Guestbook
 
 <SeoHead Title="Architektur"
-         Description="Wie KenoKoch.com gebaut ist: modularer Monolith mit .NET 10 und Blazor, Azure App Service, Azure SQL Serverless mit Managed Identity, Bicep und GitHub Actions."
+         Description="Wie KenoKoch.de gebaut ist: modularer Monolith mit .NET 10 und Blazor, Azure App Service, Azure SQL Serverless mit Managed Identity, Bicep und GitHub Actions."
          Path="/architektur" />
 
 <section class="page-hero">
@@ -127,7 +127,7 @@
 
     private static readonly Item[] Flow =
     [
-        new("globe", "DNS und TLS", "kenokoch.com zeigt auf Azure App Service. Die Verbindung ist per HTTPS gesichert, www wird auf die Hauptdomain umgeleitet."),
+        new("globe", "DNS und TLS", "kenokoch.de zeigt auf Azure App Service. Die Verbindung ist per HTTPS gesichert, www wird auf die Hauptdomain umgeleitet."),
         new("file-code", "Statisches Server-Rendering", "Kestrel rendert die Seite als HTML – schnell und für Suchmaschinen lesbar. Security-Header inklusive Content-Security-Policy mit Nonce kommen mit."),
         new("zap", "Interaktive Inseln", "Nur die Teile, die interaktiv sein müssen, bauen eine SignalR-Verbindung auf (Live-Zähler, SPS, Gästebuch). Der Rest bleibt reines HTML."),
         new("cpu", "WebAssembly bei Bedarf", "Auf der Demo-Seite lädt der Browser die .NET-Runtime nach und führt C# lokal aus – ohne Server-Roundtrips."),

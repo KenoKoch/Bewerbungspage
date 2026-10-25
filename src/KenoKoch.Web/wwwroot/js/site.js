@@ -1,4 +1,4 @@
-// KenoKoch.com – kleine Progressive-Enhancement-Schicht.
+// KenoKoch.de – kleine Progressive-Enhancement-Schicht.
 // Alles funktioniert auch ohne dieses Skript; es ergänzt nur Komfort und Animationen.
 // Wird nach blazor.web.js geladen und nach jeder Enhanced Navigation erneut initialisiert.
 (() => {

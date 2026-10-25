@@ -3,4 +3,4 @@ Allow: /
 Disallow: /api/
 Disallow: /health
 
-Sitemap: https://kenokoch.com/sitemap.xml
+Sitemap: https://kenokoch.de/sitemap.xml

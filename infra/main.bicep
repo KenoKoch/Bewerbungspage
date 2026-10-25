@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  KenoKoch.com – Azure-Infrastruktur
+//  KenoKoch.de – Azure-Infrastruktur
 //  App Service (Linux, .NET 10) · Azure SQL Database (Serverless, Free Offer)
 //  Application Insights · Managed Identity · optional eigene Domain mit Zertifikat
 //
@@ -50,7 +50,7 @@ param useSqlFreeLimit bool = true
 ])
 param sqlFreeLimitExhaustionBehavior string = 'AutoPause'
 
-@description('Eigene Domain ohne www, z. B. "kenokoch.com". Leer lassen, bis die DNS-Einträge gesetzt sind.')
+@description('Eigene Domain ohne www, z. B. "kenokoch.de". Leer lassen, bis die DNS-Einträge gesetzt sind.')
 param customDomain string = ''
 
 @description('Zusätzlich www.<Domain> binden (leitet die App auf die Hauptdomain um).')
@@ -66,7 +66,7 @@ var names = {
   sqlDatabase: 'sqldb-${appName}'
 }
 var tags = {
-  application: 'KenoKoch.com'
+  application: 'KenoKoch.de'
   managedBy: 'bicep'
 }
 
