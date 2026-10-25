@@ -7,7 +7,7 @@ param appName = 'kenokoch'
 // Als Name genügt ein Anzeigename – entscheidend ist die Objekt-ID deiner Anmeldung:
 //   az ad signed-in-user show --query id -o tsv
 param sqlAdminLogin = 'Keno Koch'
-param sqlAdminObjectId = '<objekt-id-aus-microsoft-entra>'
+param sqlAdminObjectId = 'f28b30a1-d25d-4297-b9bc-e5d15218bd88'
 
 // Kostenloses Azure-SQL-Kontingent (nur eine Datenbank pro Abonnement)
 param useSqlFreeLimit = true
