@@ -4,8 +4,8 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <!-- Transitive Abhängigkeiten auf gepatchte Versionen anheben (NuGet Audit) -->
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-    <AspNetCoreVersion>10.0.13</AspNetCoreVersion>
-    <EfCoreVersion>10.0.13</EfCoreVersion>
+    <AspNetCoreVersion>10.0.14</AspNetCoreVersion>
+    <EfCoreVersion>10.0.14</EfCoreVersion>
   </PropertyGroup>
 
   <ItemGroup Label="ASP.NET Core &amp; Blazor">
